@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -8,13 +11,27 @@ import '../style/sf_symbol.dart';
 /// Immutable data describing a single tab bar item.
 class CNTabBarItem {
   /// Creates a tab bar item description.
-  const CNTabBarItem({this.label, this.icon});
+  const CNTabBarItem({
+    this.label,
+    this.icon,
+    this.image,
+    this.imageSize,
+  }) : assert(icon == null || image == null,
+            'Cannot provide both icon and image');
 
   /// Optional tab item label.
   final String? label;
 
   /// Optional SF Symbol for the item.
   final CNSymbol? icon;
+
+  /// Optional custom image provider for the item.
+  /// Cannot be used together with [icon].
+  final ImageProvider? image;
+
+  /// Size for the custom image in points. Only applies when [image] is used.
+  /// If not specified, the image will use its intrinsic size or be scaled to fit.
+  final double? imageSize;
 }
 
 /// A Cupertino-native tab bar. Uses native UITabBar/NSTabView style visuals.
@@ -81,6 +98,7 @@ class _CNTabBarState extends State<CNTabBar> {
   double? _intrinsicWidth;
   List<String>? _lastLabels;
   List<String>? _lastSymbols;
+  List<String>? _lastImageKeys;
   bool? _lastSplit;
   int? _lastRightCount;
   double? _lastSplitSpacing;
@@ -134,11 +152,24 @@ class _CNTabBarState extends State<CNTabBar> {
         .map((e) => resolveColorToArgb(e.icon?.color, context))
         .toList();
 
+    // Build image keys and sizes for items with custom images
+    final imageKeys = widget.items.map((e) {
+      if (e.image != null) {
+        // Generate a unique key for the image
+        return e.image.hashCode.toString();
+      }
+      return '';
+    }).toList();
+    
+    final imageSizes = widget.items.map((e) => e.imageSize).toList();
+
     final creationParams = <String, dynamic>{
       'labels': labels,
       'sfSymbols': symbols,
       'sfSymbolSizes': sizes,
       'sfSymbolColors': colors,
+      'imageKeys': imageKeys,
+      'imageSizes': imageSizes,
       'selectedIndex': widget.currentIndex,
       'isDark': _isDark,
       'split': widget.split,
@@ -190,6 +221,7 @@ class _CNTabBarState extends State<CNTabBar> {
     _lastSplit = widget.split;
     _lastRightCount = widget.rightCount;
     _lastSplitSpacing = widget.splitSpacing;
+    _loadAndSendImages();
   }
 
   Future<dynamic> _onMethodCall(MethodCall call) async {
@@ -232,15 +264,22 @@ class _CNTabBarState extends State<CNTabBar> {
     // Items update (for hot reload or dynamic changes)
     final labels = widget.items.map((e) => e.label ?? '').toList();
     final symbols = widget.items.map((e) => e.icon?.name ?? '').toList();
+    final imageKeys =
+        widget.items.map((e) => e.image?.hashCode.toString() ?? '').toList();
     if (_lastLabels?.join('|') != labels.join('|') ||
-        _lastSymbols?.join('|') != symbols.join('|')) {
+        _lastSymbols?.join('|') != symbols.join('|') ||
+        _lastImageKeys?.join('|') != imageKeys.join('|')) {
       await ch.invokeMethod('setItems', {
         'labels': labels,
         'sfSymbols': symbols,
+        'imageKeys': imageKeys,
         'selectedIndex': widget.currentIndex,
       });
       _lastLabels = labels;
       _lastSymbols = symbols;
+      _lastImageKeys = imageKeys;
+      // Reload images if they changed
+      _loadAndSendImages();
       // Re-measure width in case content changed
       _requestIntrinsicSize();
     }
@@ -282,6 +321,59 @@ class _CNTabBarState extends State<CNTabBar> {
   void _cacheItems() {
     _lastLabels = widget.items.map((e) => e.label ?? '').toList();
     _lastSymbols = widget.items.map((e) => e.icon?.name ?? '').toList();
+    _lastImageKeys =
+        widget.items.map((e) => e.image?.hashCode.toString() ?? '').toList();
+  }
+
+  Future<void> _loadAndSendImages() async {
+    final ch = _channel;
+    if (ch == null) return;
+
+    for (int i = 0; i < widget.items.length; i++) {
+      final item = widget.items[i];
+      if (item.image != null) {
+        try {
+          final imageData = await _loadImageAsBytes(item.image!);
+          if (imageData != null && mounted) {
+            await ch.invokeMethod('setCustomImage', {
+              'index': i,
+              'imageData': imageData,
+              if (item.imageSize != null) 'imageSize': item.imageSize,
+            });
+          }
+        } catch (e) {
+          // Silently fail if image loading fails
+        }
+      }
+    }
+  }
+
+  Future<Uint8List?> _loadImageAsBytes(ImageProvider imageProvider) async {
+    final imageStream = imageProvider.resolve(const ImageConfiguration());
+    final completer = Completer<Uint8List?>();
+
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener((ImageInfo info, bool _) async {
+      try {
+        final byteData =
+            await info.image.toByteData(format: ui.ImageByteFormat.png);
+        if (byteData != null) {
+          completer.complete(byteData.buffer.asUint8List());
+        } else {
+          completer.complete(null);
+        }
+      } catch (e) {
+        completer.complete(null);
+      } finally {
+        imageStream.removeListener(listener);
+      }
+    }, onError: (dynamic exception, StackTrace? stackTrace) {
+      completer.complete(null);
+      imageStream.removeListener(listener);
+    });
+
+    imageStream.addListener(listener);
+    return completer.future;
   }
 
   Future<void> _requestIntrinsicSize() async {

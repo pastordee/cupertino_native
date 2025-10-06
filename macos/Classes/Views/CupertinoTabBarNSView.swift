@@ -7,6 +7,8 @@ class CupertinoTabBarNSView: NSView {
   private var currentLabels: [String] = []
   private var currentSymbols: [String] = []
   private var currentSizes: [NSNumber] = []
+  private var customImages: [Int: NSImage] = [:]
+  private var customImageSizes: [Int: CGFloat] = [:]
   private var currentTint: NSColor? = nil
   private var currentBackground: NSColor? = nil
 
@@ -92,6 +94,36 @@ class CupertinoTabBarNSView: NSView {
           self.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
           result(nil)
         } else { result(FlutterError(code: "bad_args", message: "Missing isDark", details: nil)) }
+      case "setCustomImage":
+        if let args = call.arguments as? [String: Any],
+           let index = (args["index"] as? NSNumber)?.intValue,
+           let imageData = args["imageData"] as? FlutterStandardTypedData,
+           var image = NSImage(data: imageData.data) {
+          
+          // Apply size if specified
+          if let size = args["imageSize"] as? NSNumber {
+            let targetSize = CGFloat(truncating: size)
+            self.customImageSizes[index] = targetSize
+            // Resize the image
+            let newSize = NSSize(width: targetSize, height: targetSize)
+            let resizedImage = NSImage(size: newSize)
+            resizedImage.lockFocus()
+            image.draw(in: NSRect(origin: .zero, size: newSize),
+                      from: NSRect(origin: .zero, size: image.size),
+                      operation: .sourceOver,
+                      fraction: 1.0)
+            resizedImage.unlockFocus()
+            image = resizedImage
+          }
+          
+          self.customImages[index] = image
+          // Update the segment to show the new image
+          self.configureSegments(labels: self.currentLabels, symbols: self.currentSymbols, sizes: self.currentSizes)
+          self.applySegmentTint()
+          result(nil)
+        } else {
+          result(FlutterError(code: "bad_args", message: "Invalid image data", details: nil))
+        }
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -104,7 +136,10 @@ class CupertinoTabBarNSView: NSView {
     let count = max(labels.count, symbols.count)
     control.segmentCount = count
     for i in 0..<count {
-      if i < symbols.count, #available(macOS 11.0, *), var image = NSImage(systemSymbolName: symbols[i], accessibilityDescription: nil) {
+      // Prefer custom image over SF Symbol
+      if let customImage = customImages[i] {
+        control.setImage(customImage, forSegment: i)
+      } else if i < symbols.count, #available(macOS 11.0, *), var image = NSImage(systemSymbolName: symbols[i], accessibilityDescription: nil) {
         if i < sizes.count, #available(macOS 12.0, *) {
           let size = CGFloat(truncating: sizes[i])
           let cfg = NSImage.SymbolConfiguration(pointSize: size, weight: .regular)
@@ -124,8 +159,15 @@ class CupertinoTabBarNSView: NSView {
     guard count > 0 else { return }
     let sel = control.selectedSegment
     for i in 0..<count {
-      // Only retint symbol-based segments
-      if let name = (i < currentSymbols.count ? currentSymbols[i] : nil), !name.isEmpty,
+      // Prefer custom image over SF Symbol
+      if let customImage = customImages[i] {
+        // For custom images, apply tint if selected
+        var image = customImage
+        if i == sel, let tint = currentTint {
+          image = image.tinted(with: tint)
+        }
+        control.setImage(image, forSegment: i)
+      } else if let name = (i < currentSymbols.count ? currentSymbols[i] : nil), !name.isEmpty,
          var image = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
         if i < currentSizes.count, #available(macOS 12.0, *) {
           let size = CGFloat(truncating: currentSizes[i])

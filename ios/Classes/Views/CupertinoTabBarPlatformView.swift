@@ -11,6 +11,8 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
   private var rightCountVal: Int = 1
   private var currentLabels: [String] = []
   private var currentSymbols: [String] = []
+  private var customImages: [Int: UIImage] = [:]
+  private var customImageSizes: [Int: CGFloat] = [:]
   private var leftInsetVal: CGFloat = 0
   private var rightInsetVal: CGFloat = 0
   private var splitSpacingVal: CGFloat = 8
@@ -62,7 +64,12 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
       var items: [UITabBarItem] = []
       for i in range {
         var image: UIImage? = nil
-        if i < symbols.count { image = UIImage(systemName: symbols[i]) }
+        // Prefer custom image over SF Symbol
+        if let customImage = self.customImages[i] {
+          image = customImage
+        } else if i < symbols.count {
+          image = UIImage(systemName: symbols[i])
+        }
         let title = (i < labels.count) ? labels[i] : nil
         items.append(UITabBarItem(title: title, image: image, selectedImage: image))
       }
@@ -171,7 +178,12 @@ channel.setMethodCallHandler { [weak self] call, result in
             var items: [UITabBarItem] = []
             for i in range {
               var image: UIImage? = nil
-              if i < symbols.count { image = UIImage(systemName: symbols[i]) }
+              // Prefer custom image over SF Symbol
+              if let customImage = self.customImages[i] {
+                image = customImage
+              } else if i < symbols.count {
+                image = UIImage(systemName: symbols[i])
+              }
               let title = (i < labels.count) ? labels[i] : nil
               items.append(UITabBarItem(title: title, image: image, selectedImage: image))
             }
@@ -219,7 +231,12 @@ channel.setMethodCallHandler { [weak self] call, result in
             var items: [UITabBarItem] = []
             for i in range {
               var image: UIImage? = nil
-              if i < symbols.count { image = UIImage(systemName: symbols[i]) }
+              // Prefer custom image over SF Symbol
+              if let customImage = self.customImages[i] {
+                image = customImage
+              } else if i < symbols.count {
+                image = UIImage(systemName: symbols[i])
+              }
               let title = (i < labels.count) ? labels[i] : nil
               items.append(UITabBarItem(title: title, image: image, selectedImage: image))
             }
@@ -330,6 +347,64 @@ channel.setMethodCallHandler { [weak self] call, result in
           }
           result(nil)
         } else { result(FlutterError(code: "bad_args", message: "Missing style", details: nil)) }
+      case "setCustomImage":
+        if let args = call.arguments as? [String: Any],
+           let index = (args["index"] as? NSNumber)?.intValue,
+           let imageData = args["imageData"] as? FlutterStandardTypedData,
+           var image = UIImage(data: imageData.data) {
+          
+          // Apply size if specified
+          if let size = args["imageSize"] as? NSNumber {
+            let targetSize = CGFloat(truncating: size)
+            self.customImageSizes[index] = targetSize
+            // Scale the image to the target size
+            let scale = UIScreen.main.scale
+            let pixelSize = targetSize * scale
+            let aspectRatio = image.size.width / image.size.height
+            let scaledSize: CGSize
+            if aspectRatio > 1 {
+              scaledSize = CGSize(width: pixelSize, height: pixelSize / aspectRatio)
+            } else {
+              scaledSize = CGSize(width: pixelSize * aspectRatio, height: pixelSize)
+            }
+            UIGraphicsBeginImageContextWithOptions(CGSize(width: targetSize, height: targetSize), false, scale)
+            image.draw(in: CGRect(origin: CGPoint(x: (targetSize - scaledSize.width / scale) / 2,
+                                                    y: (targetSize - scaledSize.height / scale) / 2),
+                                   size: CGSize(width: scaledSize.width / scale, height: scaledSize.height / scale)))
+            if let scaledImage = UIGraphicsGetImageFromCurrentImageContext() {
+              image = scaledImage
+            }
+            UIGraphicsEndImageContext()
+          }
+          
+          self.customImages[index] = image
+          // Rebuild items to show the new image
+          let count = max(self.currentLabels.count, self.currentSymbols.count)
+          func buildItems(_ range: Range<Int>) -> [UITabBarItem] {
+            var items: [UITabBarItem] = []
+            for i in range {
+              var img: UIImage? = nil
+              if let customImage = self.customImages[i] {
+                img = customImage
+              } else if i < self.currentSymbols.count {
+                img = UIImage(systemName: self.currentSymbols[i])
+              }
+              let title = (i < self.currentLabels.count) ? self.currentLabels[i] : nil
+              items.append(UITabBarItem(title: title, image: img, selectedImage: img))
+            }
+            return items
+          }
+          if self.isSplit && count > self.rightCountVal, let left = self.tabBarLeft, let right = self.tabBarRight {
+            let leftEnd = count - self.rightCountVal
+            left.items = buildItems(0..<leftEnd)
+            right.items = buildItems(leftEnd..<count)
+          } else if let bar = self.tabBar {
+            bar.items = buildItems(0..<count)
+          }
+          result(nil)
+        } else {
+          result(FlutterError(code: "bad_args", message: "Invalid image data", details: nil))
+        }
       case "setBrightness":
         if let args = call.arguments as? [String: Any], let isDark = (args["isDark"] as? NSNumber)?.boolValue {
           if #available(iOS 13.0, *) { self.container.overrideUserInterfaceStyle = isDark ? .dark : .light }
