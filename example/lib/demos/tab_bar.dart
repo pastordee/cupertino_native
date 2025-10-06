@@ -64,7 +64,18 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
                   label: 'Settings',
                   icon: CNSymbol('gearshape.fill'),
                 ),
-                CNTabBarItem(icon: CNSymbol('magnifyingglass')),
+                CNTabBarItem(
+                  label: 'Custom',
+                  image: AssetImage('assets/pray_new.png'),
+                  imageSize: 28, // Control the size of the custom image
+                ),
+                // CNTabBarItem(icon: CNSymbol('magnifyingglass')),
+                // You can also use custom images with size control:
+                // CNTabBarItem(
+                //   label: 'Custom',
+                //   image: AssetImage('assets/my_icon.png'),
+                //   imageSize: 24, // Size in points
+                // ),
               ],
               currentIndex: _index,
               split: true,
