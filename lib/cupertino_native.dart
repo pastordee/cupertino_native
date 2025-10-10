@@ -8,6 +8,8 @@ export 'components/segmented_control.dart';
 export 'components/icon.dart';
 export 'components/tab_bar.dart';
 export 'components/popup_menu_button.dart';
+export 'components/navigation_bar.dart';
+export 'components/toolbar.dart';
 export 'style/sf_symbol.dart';
 export 'style/button_style.dart';
 export 'components/button.dart';

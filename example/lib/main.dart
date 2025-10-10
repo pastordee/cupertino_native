@@ -7,6 +7,8 @@ import 'demos/tab_bar.dart';
 import 'demos/icon.dart';
 import 'demos/popup_menu_button.dart';
 import 'demos/button.dart';
+import 'demos/navigation_bar.dart';
+import 'demos/toolbar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -203,6 +205,34 @@ class HomePage extends StatelessWidget {
           CupertinoListSection.insetGrouped(
             header: Text('Navigation'),
             children: [
+              CupertinoListTile(
+                title: Text('Toolbar'),
+                leading: CNIcon(
+                  symbol: CNSymbol('wrench.and.screwdriver', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const ToolbarDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Navigation Bar'),
+                leading: CNIcon(
+                  symbol: CNSymbol('menubar.rectangle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const NavigationBarDemoPage(),
+                    ),
+                  );
+                },
+              ),
               CupertinoListTile(
                 title: Text('Tab Bar'),
                 leading: CNIcon(

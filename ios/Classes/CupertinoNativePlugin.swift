@@ -29,6 +29,9 @@ public class CupertinoNativePlugin: NSObject, FlutterPlugin {
 
     let buttonFactory = CupertinoButtonViewFactory(messenger: registrar.messenger())
     registrar.register(buttonFactory, withId: "CupertinoNativeButton")
+
+    let navigationBarFactory = CupertinoNavigationBarViewFactory(messenger: registrar.messenger())
+    registrar.register(navigationBarFactory, withId: "CupertinoNativeNavigationBar")
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
