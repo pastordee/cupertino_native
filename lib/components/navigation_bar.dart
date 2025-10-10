@@ -11,6 +11,7 @@ class CNNavigationBarAction {
   const CNNavigationBarAction({
     this.icon,
     this.label,
+    this.padding = 0,
     this.onPressed,
   });
 
@@ -19,6 +20,9 @@ class CNNavigationBarAction {
 
   /// Text label for the action (used if icon is null).
   final String? label;
+
+  /// Horizontal padding around the button (increases button width).
+  final double padding;
 
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
@@ -37,13 +41,13 @@ class CNNavigationBar extends StatefulWidget {
     this.title,
     this.trailing,
     this.largeTitle = false,
-    this.transparent = false,
+    this.transparent = true,
     this.tint,
     this.height,
   });
 
-  /// Leading action (typically a back button).
-  final CNNavigationBarAction? leading;
+  /// Leading actions (typically back button, can include multiple items).
+  final List<CNNavigationBarAction>? leading;
 
   /// Title text for the navigation bar.
   final String? title;
@@ -104,10 +108,10 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         defaultTargetPlatform == TargetPlatform.macOS)) {
       // Fallback for non-Apple platforms
       return CupertinoNavigationBar(
-        leading: widget.leading != null
+        leading: widget.leading != null && widget.leading!.isNotEmpty
             ? CupertinoButton(
                 padding: EdgeInsets.zero,
-                onPressed: widget.leading!.onPressed,
+                onPressed: widget.leading!.first.onPressed,
                 child: Icon(CupertinoIcons.back),
               )
             : null,
@@ -123,19 +127,27 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       );
     }
 
-    final leadingIcon = widget.leading?.icon?.name ?? '';
-    final leadingLabel = widget.leading?.label ?? '';
+    final leadingIcons =
+        widget.leading?.map((e) => e.icon?.name ?? '').toList() ?? [];
+    final leadingLabels =
+        widget.leading?.map((e) => e.label ?? '').toList() ?? [];
+    final leadingPaddings =
+        widget.leading?.map((e) => e.padding).toList() ?? [];
     final trailingIcons =
         widget.trailing?.map((e) => e.icon?.name ?? '').toList() ?? [];
     final trailingLabels =
         widget.trailing?.map((e) => e.label ?? '').toList() ?? [];
+    final trailingPaddings =
+        widget.trailing?.map((e) => e.padding).toList() ?? [];
 
     final creationParams = <String, dynamic>{
       'title': widget.title ?? '',
-      'leadingIcon': leadingIcon,
-      'leadingLabel': leadingLabel,
+      'leadingIcons': leadingIcons,
+      'leadingLabels': leadingLabels,
+      'leadingPaddings': leadingPaddings,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
+      'trailingPaddings': trailingPaddings,
       'largeTitle': widget.largeTitle,
       'transparent': widget.transparent,
       'isDark': _isDark,
@@ -174,7 +186,13 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
 
   Future<dynamic> _onMethodCall(MethodCall call) async {
     if (call.method == 'leadingTapped') {
-      widget.leading?.onPressed?.call();
+      final args = call.arguments as Map?;
+      final index = (args?['index'] as num?)?.toInt() ?? 0;
+      if (index >= 0 &&
+          widget.leading != null &&
+          index < widget.leading!.length) {
+        widget.leading![index].onPressed?.call();
+      }
     } else if (call.method == 'trailingTapped') {
       final args = call.arguments as Map?;
       final index = (args?['index'] as num?)?.toInt() ?? 0;
