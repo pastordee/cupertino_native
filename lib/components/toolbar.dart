@@ -25,7 +25,26 @@ class CNToolbarAction {
     this.label,
     this.onPressed,
     this.padding,
-  });
+  })  : _isFixedSpace = false,
+        _isFlexibleSpace = false;
+
+  /// Creates a fixed space item with specific width.
+  const CNToolbarAction.fixedSpace(double width)
+      : icon = null,
+        label = null,
+        onPressed = null,
+        padding = width,
+        _isFixedSpace = true,
+        _isFlexibleSpace = false;
+
+  /// Creates a flexible space that expands to fill available space.
+  const CNToolbarAction.flexibleSpace()
+      : icon = null,
+        label = null,
+        onPressed = null,
+        padding = null,
+        _isFixedSpace = false,
+        _isFlexibleSpace = true;
 
   /// SF Symbol icon for the action.
   final CNSymbol? icon;
@@ -37,8 +56,23 @@ class CNToolbarAction {
   final VoidCallback? onPressed;
 
   /// Custom padding for this action. If null, uses default platform padding.
-  /// Specified in logical pixels.
+  /// Specified in logical pixels. For fixed space, this is the width of the space.
   final double? padding;
+
+  /// Internal flag to indicate this is a fixed space item.
+  final bool _isFixedSpace;
+
+  /// Internal flag to indicate this is a flexible space item.
+  final bool _isFlexibleSpace;
+
+  /// Returns true if this is a spacer (fixed or flexible).
+  bool get isSpacer => _isFixedSpace || _isFlexibleSpace;
+
+  /// Returns true if this is a fixed space item.
+  bool get isFixedSpace => _isFixedSpace;
+
+  /// Returns true if this is a flexible space item.
+  bool get isFlexibleSpace => _isFlexibleSpace;
 }
 
 /// A Cupertino-native toolbar with liquid glass translucent effect.
@@ -148,36 +182,47 @@ class _CNToolbarState extends State<CNToolbar> {
     }
 
     final leadingIcons =
-        widget.leading?.map((e) => e.icon?.name ?? '').toList() ?? [];
+        widget.leading?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
     final leadingLabels =
-        widget.leading?.map((e) => e.label ?? '').toList() ?? [];
+        widget.leading?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
     final leadingPaddings =
         widget.leading?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final leadingSpacers =
+        widget.leading?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
+    
     final middleIcons =
-        widget.middle?.map((e) => e.icon?.name ?? '').toList() ?? [];
+        widget.middle?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
     final middleLabels =
-        widget.middle?.map((e) => e.label ?? '').toList() ?? [];
+        widget.middle?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
     final middlePaddings =
         widget.middle?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final middleSpacers =
+        widget.middle?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
+    
     final trailingIcons =
-        widget.trailing?.map((e) => e.icon?.name ?? '').toList() ?? [];
+        widget.trailing?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
     final trailingLabels =
-        widget.trailing?.map((e) => e.label ?? '').toList() ?? [];
+        widget.trailing?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
     final trailingPaddings =
         widget.trailing?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final trailingSpacers =
+        widget.trailing?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
 
     final creationParams = <String, dynamic>{
       'title': '',
       'leadingIcons': leadingIcons,
       'leadingLabels': leadingLabels,
       'leadingPaddings': leadingPaddings,
+      'leadingSpacers': leadingSpacers,
       'middleIcons': middleIcons,
       'middleLabels': middleLabels,
       'middlePaddings': middlePaddings,
+      'middleSpacers': middleSpacers,
       'middleAlignment': widget.middleAlignment.name,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
       'trailingPaddings': trailingPaddings,
+      'trailingSpacers': trailingSpacers,
       'transparent': widget.transparent,
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),

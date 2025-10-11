@@ -128,6 +128,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                     icon: CNSymbol('pencil', size: 40),
                     onPressed: () => print('Edit tapped'),
                   ),
+                  // const CNToolbarAction.fixedSpace(16), // Fixed space between buttons
                   CNToolbarAction(
                     icon: CNSymbol('trash', size: 40),
                     onPressed: () => print('Delete tapped'),
@@ -135,10 +136,10 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                 ],
                 trailing: [
                   CNToolbarAction(
-                    // padding: 10,
                     icon: CNSymbol('gear'),
                     onPressed: () => print('Settings tapped'),
                   ),
+                  // const CNToolbarAction.fixedSpace(8), // Small space between buttons
                   CNToolbarAction(
                     icon: CNSymbol('plus'),
                     onPressed: () => print('Add tapped'),
@@ -159,60 +160,44 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
               child: CNToolbar(
                 middleAlignment: _middleAlignment,
                 tint: CupertinoColors.label,
-                // height: 90,
-                // pillHeight: 70,  // Make the pill buttons larger
-                // title: 'Bottom Toolbar',
-                // tint: CupertinoColors.systemPink,
                
                 leading: [
                   CNToolbarAction(
-                    // padding: 20,
-                    label: 'Download',
-                    icon: CNSymbol('square.and.arrow.down', size: 40),
-                    onPressed: () => print('Download tapped'),
-                  ),
-                  CNToolbarAction(
-                    // padding: 20,
-                    icon: CNSymbol('star', size: 40),
-                    onPressed: () => print('Favorite tapped'),
-                  ),
-                  CNToolbarAction(
-                    // padding: 20,
-                    label: 'Download',
-                    icon: CNSymbol('square.and.arrow.down', size: 40),
-                    onPressed: () => print('Download tapped'),
-                  ),
-                ],
-                 middle: [
-                  CNToolbarAction(
-                    icon: CNSymbol('pencil', size: 40),
+                    label: 'Edit',
                     onPressed: () => print('Edit tapped'),
                   ),
+                  const CNToolbarAction.fixedSpace(1), // Fixed space between text labels
                   CNToolbarAction(
-                    icon: CNSymbol('trash', size: 40),
+                    label: 'Share',
+                    padding: 2,
+                    onPressed: () => print('Share tapped'),
+                  ),
+                ],
+               
+                middle: [
+                  CNToolbarAction(
+                    icon: CNSymbol('pencil', size: 30),
+                    onPressed: () => print('Edit tapped'),
+                  ),
+                  // const CNToolbarAction.flexibleSpace(),
+                  CNToolbarAction(
+                    icon: CNSymbol('trash', size: 30),
                     onPressed: () => print('Delete tapped'),
                   ),
                 ],
+                
                 trailing: [
                   CNToolbarAction(
-                    // padding: 20,
-
-                    icon: CNSymbol('ellipsis', size: 40),
+                    icon: CNSymbol('ellipsis', size: 30),
                     onPressed: () => print('More tapped'),
                   ),
+                  const CNToolbarAction.fixedSpace(2),
                   CNToolbarAction(
-                    // padding: 20,
-
-                    icon: CNSymbol('square.and.arrow.up', size: 40),
-                    onPressed: () => print('More tapped'),
-                  ),
-                  CNToolbarAction(
-                    // padding: 20,
-
-                    icon: CNSymbol('ellipsis', size: 40),
+                    icon: CNSymbol('ellipsis', size: 30),
                     onPressed: () => print('More tapped'),
                   ),
                 ],
+                
                 
                 transparent: _isTransparent,
               ),

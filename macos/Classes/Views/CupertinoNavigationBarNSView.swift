@@ -45,12 +45,15 @@ class CupertinoNavigationBarNSView: NSView {
     var leadingIcons: [String] = []
     var leadingLabels: [String] = []
     var leadingPaddings: [Double] = []
+    var leadingSpacers: [String] = []
     var middleIcons: [String] = []
     var middleLabels: [String] = []
     var middlePaddings: [Double] = []
+    var middleSpacers: [String] = []
     var trailingIcons: [String] = []
     var trailingLabels: [String] = []
     var trailingPaddings: [Double] = []
+    var trailingSpacers: [String] = []
     var transparent: Bool = false
     var isDark: Bool = false
     var tint: NSColor? = nil
@@ -62,12 +65,15 @@ class CupertinoNavigationBarNSView: NSView {
       leadingIcons = (dict["leadingIcons"] as? [String]) ?? []
       leadingLabels = (dict["leadingLabels"] as? [String]) ?? []
       leadingPaddings = (dict["leadingPaddings"] as? [Double]) ?? []
+      leadingSpacers = (dict["leadingSpacers"] as? [String]) ?? []
       middleIcons = (dict["middleIcons"] as? [String]) ?? []
       middleLabels = (dict["middleLabels"] as? [String]) ?? []
       middlePaddings = (dict["middlePaddings"] as? [Double]) ?? []
+      middleSpacers = (dict["middleSpacers"] as? [String]) ?? []
       trailingIcons = (dict["trailingIcons"] as? [String]) ?? []
       trailingLabels = (dict["trailingLabels"] as? [String]) ?? []
       trailingPaddings = (dict["trailingPaddings"] as? [Double]) ?? []
+      trailingSpacers = (dict["trailingSpacers"] as? [String]) ?? []
       pillHeight = dict["pillHeight"] as? Double
       middleAlignment = (dict["middleAlignment"] as? String) ?? "center"
       if let v = dict["transparent"] as? NSNumber { transparent = v.boolValue }
