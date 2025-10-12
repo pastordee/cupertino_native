@@ -11,6 +11,12 @@ class ToolbarDemoPage extends StatefulWidget {
 class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
   bool _isTransparent = true;
   CNToolbarMiddleAlignment _middleAlignment = CNToolbarMiddleAlignment.center;
+  bool _isSearchExpanded = false;
+  String _searchText = '';
+  
+  // Remember the toolbar state before search expansion
+  bool _lastTransparentState = true;
+  CNToolbarMiddleAlignment _lastMiddleAlignment = CNToolbarMiddleAlignment.center;
 
   @override
   Widget build(BuildContext context) {
@@ -111,43 +117,9 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
             top: 0,
             child: SafeArea(
               bottom: false,
-              child: CNToolbar(
-                middleAlignment: _middleAlignment,
-                leading: [
-                  CNToolbarAction(
-                    icon: CNSymbol('chevron.left'),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  CNToolbarAction(
-                    icon: CNSymbol('square.and.arrow.up'),
-                    onPressed: () => print('Share tapped'),
-                  ),
-                ],
-                middle: [
-                  CNToolbarAction(
-                    icon: CNSymbol('pencil', size: 40),
-                    onPressed: () => print('Edit tapped'),
-                  ),
-                  // const CNToolbarAction.fixedSpace(16), // Fixed space between buttons
-                  CNToolbarAction(
-                    icon: CNSymbol('trash', size: 40),
-                    onPressed: () => print('Delete tapped'),
-                  ),
-                ],
-                trailing: [
-                  CNToolbarAction(
-                    icon: CNSymbol('gear'),
-                    onPressed: () => print('Settings tapped'),
-                  ),
-                  // const CNToolbarAction.fixedSpace(8), // Small space between buttons
-                  CNToolbarAction(
-                    icon: CNSymbol('plus'),
-                    onPressed: () => print('Add tapped'),
-                  ),
-                ],
-                tint: CupertinoColors.label,
-                transparent: _isTransparent,
-              ),
+              child: _isSearchExpanded
+                  ? _buildExpandedSearchToolbar()
+                  : _buildNormalToolbar(),
             ),
           ),
           // Bottom toolbar
@@ -166,7 +138,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                     label: 'Edit',
                     onPressed: () => print('Edit tapped'),
                   ),
-                  const CNToolbarAction.fixedSpace(1), // Fixed space between text labels
+                  const CNToolbarAction.fixedSpace(12), // Fixed space between text labels
                   CNToolbarAction(
                     label: 'Share',
                     padding: 2,
@@ -177,8 +149,9 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                 middle: [
                   CNToolbarAction(
                     icon: CNSymbol('pencil', size: 30),
-                    onPressed: () => print('Edit tapped'),
+                    onPressed: () => print('pencil tapped'),
                   ),
+                  // const CNToolbarAction.fixedSpace(1),
                   // const CNToolbarAction.flexibleSpace(),
                   CNToolbarAction(
                     icon: CNSymbol('trash', size: 30),
@@ -191,10 +164,10 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                     icon: CNSymbol('ellipsis', size: 30),
                     onPressed: () => print('More tapped'),
                   ),
-                  const CNToolbarAction.fixedSpace(2),
+                  const CNToolbarAction.flexibleSpace(),
                   CNToolbarAction(
-                    icon: CNSymbol('ellipsis', size: 30),
-                    onPressed: () => print('More tapped'),
+                    icon: CNSymbol('play', size: 30),
+                    onPressed: () => print('Play tapped'),
                   ),
                 ],
                 
@@ -207,4 +180,109 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
       ),
     );
   }
+
+  Widget _buildNormalToolbar() {
+    return CNToolbar(
+      middleAlignment: _middleAlignment,
+      leading: [
+        CNToolbarAction(
+          icon: CNSymbol('chevron.left'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        CNToolbarAction(
+          icon: CNSymbol('square.and.arrow.up'),
+          onPressed: () => print('Share tapped'),
+        ),
+      ],
+      middle: [
+        CNToolbarAction(
+          icon: CNSymbol('pencil', size: 40),
+          onPressed: () => print('Edit tapped'),
+        ),
+        CNToolbarAction(
+          icon: CNSymbol('trash', size: 40),
+          onPressed: () => print('Delete tapped'),
+        ),
+      ],
+      trailing: [
+        CNToolbarAction(
+          icon: CNSymbol('magnifyingglass'),
+          onPressed: () {
+            setState(() {
+              // Save current state before expanding search
+              _lastTransparentState = _isTransparent;
+              _lastMiddleAlignment = _middleAlignment;
+              _isSearchExpanded = true;
+            });
+          },
+        ),
+        CNToolbarAction(
+          icon: CNSymbol('plus'),
+          onPressed: () => print('Add tapped'),
+        ),
+      ],
+      tint: CupertinoColors.label,
+      transparent: _isTransparent,
+    );
+  }
+
+  Widget _buildExpandedSearchToolbar() {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Row(
+        children: [
+          // Show a mini toolbar with the back icon on the left
+          // Using 'trailing' for single-item toolbar positions it naturally
+          SizedBox(
+            width: 80,
+            height: 44,
+            child: CNToolbar(
+              trailing: [
+                CNToolbarAction(
+                  icon: CNSymbol('chevron.left', size: 22),
+                  onPressed: () {
+                    // Return to normal toolbar state
+                    setState(() {
+                      _isSearchExpanded = false;
+                      _isTransparent = _lastTransparentState;
+                      _middleAlignment = _lastMiddleAlignment;
+                      _searchText = '';
+                    });
+                  },
+                ),
+              ],
+              transparent: _lastTransparentState,
+              tint: CupertinoColors.label,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Expanded search bar
+          Expanded(
+            child: CNSearchBar(
+              placeholder: 'Search',
+              showsCancelButton: true,
+              onTextChanged: (text) {
+                setState(() => _searchText = text);
+                print('Searching: $text');
+              },
+              onSearchButtonClicked: (text) {
+                print('Search submitted: $text');
+              },
+              onCancelButtonClicked: () {
+                setState(() {
+                  _isSearchExpanded = false;
+                  _isTransparent = _lastTransparentState;
+                  _middleAlignment = _lastMiddleAlignment;
+                  _searchText = '';
+                });
+              },
+              height: 40,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

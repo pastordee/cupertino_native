@@ -2,6 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show TabController, TabBarView;
 import 'package:cupertino_native/cupertino_native.dart';
 
+/// Demonstrates CNTabBar with search integration.
+/// 
+/// IMPORTANT: When using CNToolbar with a SINGLE item, use `trailing` instead of `leading`.
+/// This is iOS native behavior - single items in rightBarButtonItems position and respond 
+/// better than leftBarButtonItems. See TOOLBAR_SINGLE_ITEM_BEHAVIOR.md for details.
 class TabBarDemoPage extends StatefulWidget {
   const TabBarDemoPage({super.key});
 
@@ -13,6 +18,9 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     with SingleTickerProviderStateMixin {
   late final TabController _controller;
   int _index = 0;
+  bool _isSearchExpanded = false;
+  String _searchText = '';
+  int _lastTabIndex = 0; // Remember the last tab before search
 
   @override
   void initState() {
@@ -44,8 +52,8 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
               controller: _controller,
               children: const [
                 _ImageTabPage(asset: 'assets/home.jpg', label: 'Home'),
-                _ImageTabPage(asset: 'assets/profile.jpg', label: 'Profile'),
-                _ImageTabPage(asset: 'assets/settings.jpg', label: 'Settings'),
+                _ImageTabPage(asset: 'assets/profile.jpg', label: 'Radio'),
+                _ImageTabPage(asset: 'assets/settings.jpg', label: 'Library'),
                 _ImageTabPage(asset: 'assets/search.jpg', label: 'Search'),
               ],
             ),
@@ -53,46 +61,188 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
           // Native tab bar overlay
           Align(
             alignment: Alignment.bottomCenter,
-            child: CNTabBar(
-              // height: 80,
-              items: const [
-                CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
-                CNTabBarItem(
-                  label: 'Profile',
-                  icon: CNSymbol('person.crop.circle'),
-                ),
-                CNTabBarItem(
-                  label: 'Settings',
-                  icon: CNSymbol('gearshape.fill'),
-                ),
-                CNTabBarItem(
-                  label: 'Settings',
-                  icon: CNSymbol('gearshape.fill'),
-                ),
-                CNTabBarItem(
-                  label: 'Custom',
-                  image: AssetImage('assets/pray_new.png'),
-                  imageSize: 28, // Control the size of the custom image
-                ),
-                // CNTabBarItem(icon: CNSymbol('magnifyingglass')),
-                // You can also use custom images with size control:
-                // CNTabBarItem(
-                //   label: 'Custom',
-                //   image: AssetImage('assets/my_icon.png'),
-                //   imageSize: 24, // Size in points
-                // ),
-              ],
-              currentIndex: _index,
-              split: true,
-              rightCount: 1,
-              shrinkCentered: true,
-              onTap: (i) {
-                setState(() => _index = i);
-                _controller.animateTo(i);
-              },
-            ),
+            child: _isSearchExpanded ? _buildExpandedSearch() : _buildTabBar(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return CNTabBar(
+      // Using split mode to create visual separation for search tab
+      // This matches the iOS pattern where search is on the trailing edge
+      items: const [
+        CNTabBarItem(
+          label: 'Home',
+          icon: CNSymbol('house.fill'),
+        ),
+        CNTabBarItem(
+          label: 'Radio',
+          icon: CNSymbol('dot.radiowaves.left.and.right'),
+        ),
+        CNTabBarItem(
+          label: 'Library',
+          icon: CNSymbol('music.note.list'),
+          badgeValue: 99, // Shows as "99+"
+          badgeColor: CupertinoColors.systemRed,
+        ),
+        CNTabBarItem(
+          label: 'Search',
+          icon: CNSymbol('magnifyingglass'),
+          badgeValue: 3,
+          badgeColor: CupertinoColors.systemBlue,
+        ),
+      ],
+      currentIndex: _index,
+      split: true, // Creates visual separation between main tabs and search
+      rightCount: 1, // Search tab on trailing side
+      shrinkCentered: true,
+      onTap: (i) {
+        if (i == 3) {
+          // Search tab tapped - remember current tab and expand search
+          print('🔍 Search tapped! Current tab before search: $_index');
+          setState(() {
+            _lastTabIndex = _index;
+            _isSearchExpanded = true;
+          });
+          print('🔍 _lastTabIndex set to: $_lastTabIndex');
+        } else {
+          setState(() => _index = i);
+          _controller.animateTo(i);
+        }
+      },
+    );
+  }
+
+  // Get the CNSymbol for the last selected tab
+  CNSymbol _getLastTabIconSymbol() {
+    CNSymbol symbol;
+    switch (_lastTabIndex) {
+      case 0:
+        symbol = const CNSymbol('house.fill', size: 64);
+        break;
+      case 1:
+        symbol = const CNSymbol('dot.radiowaves.left.and.right', size: 64);
+        break;
+      case 2:
+        symbol = const CNSymbol('music.note.list', size: 64);
+        break;
+      default:
+        symbol = const CNSymbol('house.fill', size: 64);
+    }
+    print('📍 Getting symbol for tab $_lastTabIndex: ${symbol.name}');
+    return symbol;
+  }
+
+  // Get the IconData for the last selected tab (for CupertinoButton approach)
+  IconData _getLastTabIconData() {
+    switch (_lastTabIndex) {
+      case 0:
+        return CupertinoIcons.house_fill;
+      case 1:
+        return CupertinoIcons.dot_radiowaves_left_right;
+      case 2:
+        return CupertinoIcons.music_note_list;
+      default:
+        return CupertinoIcons.house_fill;
+    }
+  }
+
+    // Method 1: Using CNToolbar with native SF Symbols (native look with blur)
+  // NOTE: When CNToolbar has only one item, use 'trailing' to position it on the left side
+  // This is iOS native behavior - 'trailing' in a single-item toolbar positions it naturally
+  Widget _buildLastTabIconWithToolbar() {
+    final symbol = _getLastTabIconSymbol();
+    print('🎨 Building toolbar with symbol: ${symbol.name} for tab $_lastTabIndex');
+    
+    return SizedBox(
+      width: 80, // Wider for better touch target
+      child: CNToolbar(
+        trailing: [ // Use 'trailing' for single items to position on left
+          CNToolbarAction(
+            icon: symbol,
+            onPressed: () {
+              print('� Toolbar button pressed! Returning to tab $_lastTabIndex');
+              setState(() {
+                _isSearchExpanded = false;
+                _index = _lastTabIndex;
+                _searchText = '';
+              });
+              _controller.animateTo(_lastTabIndex);
+            },
+          ),
+        ],
+        height: 44,
+        transparent: true,
+      ),
+    );
+  }
+
+  // Method 2: Using CupertinoButton with Flutter Icon (works but different look)
+  Widget _buildLastTabIconWithButton() {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          print('✅ CupertinoButton pressed! Last tab index: $_lastTabIndex');
+          // Tapping the icon returns to that tab and collapses search
+          setState(() {
+            _isSearchExpanded = false;
+            _index = _lastTabIndex;
+            _searchText = '';
+          });
+          _controller.animateTo(_lastTabIndex);
+        },
+        child: Icon(
+          _getLastTabIconData(),
+          size: 24,
+          color: CupertinoColors.systemBlue,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedSearch() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        // color: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.95),
+        padding: const EdgeInsets.symmetric(horizontal: 1, vertical:1),
+        child: Row(
+          children: [
+            // METHOD 1: CNToolbar with native SF Symbols (unified native look with blur)
+            _buildLastTabIconWithToolbar(),
+            
+            // METHOD 2: CupertinoButton with Flutter Icon (uncomment to compare)
+            // _buildLastTabIconWithButton(),
+            
+            const SizedBox(width: 1),
+            // Expanded search bar
+            Expanded(
+              child: CNSearchBar(
+                placeholder: 'Shows, Movies, and More',
+                showsCancelButton: true,
+                onTextChanged: (text) {
+                  setState(() => _searchText = text);
+                  print('Searching: $text');
+                },
+                onSearchButtonClicked: (text) {
+                  print('Search submitted: $text');
+                },
+                onCancelButtonClicked: () {
+                  setState(() {
+                    _isSearchExpanded = false;
+                    _searchText = '';
+                  });
+                },
+                height: 50,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

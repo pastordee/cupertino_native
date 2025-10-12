@@ -16,6 +16,8 @@ class CNTabBarItem {
     this.icon,
     this.image,
     this.imageSize,
+    this.badgeValue,
+    this.badgeColor,
   }) : assert(icon == null || image == null,
             'Cannot provide both icon and image');
 
@@ -32,6 +34,48 @@ class CNTabBarItem {
   /// Size for the custom image in points. Only applies when [image] is used.
   /// If not specified, the image will use its intrinsic size or be scaled to fit.
   final double? imageSize;
+
+  /// Badge value to display on the tab.
+  /// 
+  /// Supports automatic formatting:
+  /// - Numbers are formatted (e.g., 150 becomes "99+" if over 99)
+  /// - Use "!" for critical alerts
+  /// - Use empty string or null to hide the badge
+  /// 
+  /// Pass either a String or an int:
+  /// ```dart
+  /// badgeValue: '5'      // Shows "5"
+  /// badgeValue: 150      // Shows "99+"
+  /// badgeValue: '!'      // Shows "!" for alerts
+  /// ```
+  final dynamic badgeValue;
+
+  /// Optional custom badge background color.
+  /// If null, uses the system default red color for badges.
+  /// 
+  /// Examples:
+  /// ```dart
+  /// badgeColor: CupertinoColors.systemRed      // Default critical (red)
+  /// badgeColor: CupertinoColors.systemBlue     // Informational (blue)
+  /// badgeColor: CupertinoColors.systemGreen    // Success (green)
+  /// badgeColor: CupertinoColors.systemOrange   // Warning (orange)
+  /// ```
+  final Color? badgeColor;
+
+  /// Formats a badge value for display.
+  /// Numbers over 99 are shown as "99+".
+  /// Strings are returned as-is.
+  String? get formattedBadgeValue {
+    if (badgeValue == null) return null;
+    if (badgeValue is int) {
+      final count = badgeValue as int;
+      if (count <= 0) return null;
+      if (count > 99) return '99+';
+      return count.toString();
+    }
+    final str = badgeValue.toString();
+    return str.isEmpty ? null : str;
+  }
 }
 
 /// A Cupertino-native tab bar. Uses native UITabBar/NSTabView style visuals.
@@ -50,6 +94,12 @@ class CNTabBar extends StatefulWidget {
     this.rightCount = 1,
     this.shrinkCentered = true,
     this.splitSpacing = 8.0,
+    this.leadingAccessory,
+    this.trailingAccessory,
+    this.showSearchField = false,
+    this.searchPlaceholder,
+    this.onSearchChanged,
+    this.onSearchSubmitted,
   });
 
   /// Items to display in the tab bar.
@@ -78,11 +128,52 @@ class CNTabBar extends StatefulWidget {
 
   /// How many trailing items to pin right when [split] is true.
   final int rightCount; // how many trailing items to pin right when split
+  
   /// When true, centers the split groups more tightly.
   final bool shrinkCentered;
 
   /// Gap between left/right halves when split.
   final double splitSpacing; // gap between left/right halves when split
+
+  /// Optional leading accessory (button or control) to display before tabs.
+  /// Typically used for menu buttons, filters, or navigation controls.
+  /// 
+  /// Example:
+  /// ```dart
+  /// leadingAccessory: CNButton(
+  ///   icon: CNSymbol('line.3.horizontal'),
+  ///   style: CNButtonStyle.borderless,
+  ///   onTap: () => showMenu(),
+  /// )
+  /// ```
+  final Widget? leadingAccessory;
+
+  /// Optional trailing accessory (button or control) to display after tabs.
+  /// Typically used for compose, add, or action buttons.
+  /// 
+  /// Example:
+  /// ```dart
+  /// trailingAccessory: CNButton(
+  ///   icon: CNSymbol('square.and.pencil'),
+  ///   style: CNButtonStyle.borderless,
+  ///   onTap: () => compose(),
+  /// )
+  /// ```
+  final Widget? trailingAccessory;
+
+  /// When true, displays a search field in the tab bar.
+  /// The search field can be positioned inline with tabs or as a separate row.
+  final bool showSearchField;
+
+  /// Placeholder text for the search field.
+  /// Defaults to "Search" if not specified.
+  final String? searchPlaceholder;
+
+  /// Called when the search text changes.
+  final ValueChanged<String>? onSearchChanged;
+
+  /// Called when the user submits the search (e.g., taps return key).
+  final ValueChanged<String>? onSearchSubmitted;
 
   @override
   State<CNTabBar> createState() => _CNTabBarState();
@@ -99,6 +190,7 @@ class _CNTabBarState extends State<CNTabBar> {
   List<String>? _lastLabels;
   List<String>? _lastSymbols;
   List<String>? _lastImageKeys;
+  List<String>? _lastBadges;
   bool? _lastSplit;
   int? _lastRightCount;
   double? _lastSplitSpacing;
@@ -151,6 +243,10 @@ class _CNTabBarState extends State<CNTabBar> {
     final colors = widget.items
         .map((e) => resolveColorToArgb(e.icon?.color, context))
         .toList();
+    final badges = widget.items.map((e) => e.formattedBadgeValue ?? '').toList();
+    final badgeColors = widget.items
+        .map((e) => resolveColorToArgb(e.badgeColor, context))
+        .toList();
 
     // Build image keys and sizes for items with custom images
     final imageKeys = widget.items.map((e) {
@@ -168,6 +264,8 @@ class _CNTabBarState extends State<CNTabBar> {
       'sfSymbols': symbols,
       'sfSymbolSizes': sizes,
       'sfSymbolColors': colors,
+      'badges': badges,
+      'badgeColors': badgeColors,
       'imageKeys': imageKeys,
       'imageSizes': imageSizes,
       'selectedIndex': widget.currentIndex,
@@ -201,11 +299,123 @@ class _CNTabBarState extends State<CNTabBar> {
           );
 
     final h = widget.height ?? _intrinsicHeight ?? 50.0;
+    
+    Widget tabBarWidget;
     if (!widget.split && widget.shrinkCentered) {
       final w = _intrinsicWidth;
-      return SizedBox(height: h, width: w, child: platformView);
+      tabBarWidget = SizedBox(height: h, width: w, child: platformView);
+    } else {
+      tabBarWidget = SizedBox(height: h, child: platformView);
     }
-    return SizedBox(height: h, child: platformView);
+
+    // Wrap with accessories and/or search field if needed
+    final hasLeadingAccessory = widget.leadingAccessory != null;
+    final hasTrailingAccessory = widget.trailingAccessory != null;
+    final hasSearchField = widget.showSearchField;
+
+    if (!hasLeadingAccessory && !hasTrailingAccessory && !hasSearchField) {
+      return tabBarWidget;
+    }
+
+    // Build the complete tab bar with accessories and/or search
+    return _buildTabBarWithAccessories(tabBarWidget, h);
+  }
+
+  Widget _buildTabBarWithAccessories(Widget tabBar, double height) {
+    final children = <Widget>[];
+
+    // Add search field row if enabled
+    if (widget.showSearchField) {
+      children.add(
+        _buildSearchRow(height),
+      );
+    }
+
+    // Build main tab bar row with accessories
+    final tabBarRow = <Widget>[];
+
+    if (widget.leadingAccessory != null) {
+      tabBarRow.add(
+        Padding(
+          padding: const EdgeInsets.only(left: 8, right: 4),
+          child: SizedBox(
+            height: height,
+            child: Center(child: widget.leadingAccessory!),
+          ),
+        ),
+      );
+    }
+
+    tabBarRow.add(Expanded(child: tabBar));
+
+    if (widget.trailingAccessory != null) {
+      tabBarRow.add(
+        Padding(
+          padding: const EdgeInsets.only(left: 4, right: 8),
+          child: SizedBox(
+            height: height,
+            child: Center(child: widget.trailingAccessory!),
+          ),
+        ),
+      );
+    }
+
+    children.add(
+      SizedBox(
+        height: height,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: tabBarRow,
+        ),
+      ),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: children,
+    );
+  }
+
+  Widget _buildSearchRow(double tabBarHeight) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: widget.backgroundColor ?? CupertinoColors.systemBackground.resolveFrom(context),
+        border: Border(
+          bottom: BorderSide(
+            color: CupertinoColors.separator.resolveFrom(context),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          if (widget.leadingAccessory != null) ...[
+            SizedBox(
+              height: 40,
+              child: widget.leadingAccessory!,
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: CupertinoSearchTextField(
+              placeholder: widget.searchPlaceholder ?? 'Search',
+              onChanged: widget.onSearchChanged,
+              onSubmitted: widget.onSearchSubmitted,
+              backgroundColor: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+            ),
+          ),
+          if (widget.trailingAccessory != null) ...[
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 40,
+              child: widget.trailingAccessory!,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   void _onCreated(int id) {
@@ -266,18 +476,26 @@ class _CNTabBarState extends State<CNTabBar> {
     final symbols = widget.items.map((e) => e.icon?.name ?? '').toList();
     final imageKeys =
         widget.items.map((e) => e.image?.hashCode.toString() ?? '').toList();
+    final badges = widget.items.map((e) => e.formattedBadgeValue ?? '').toList();
+    final badgeColors = widget.items
+        .map((e) => resolveColorToArgb(e.badgeColor, context))
+        .toList();
     if (_lastLabels?.join('|') != labels.join('|') ||
         _lastSymbols?.join('|') != symbols.join('|') ||
-        _lastImageKeys?.join('|') != imageKeys.join('|')) {
+        _lastImageKeys?.join('|') != imageKeys.join('|') ||
+        _lastBadges?.join('|') != badges.join('|')) {
       await ch.invokeMethod('setItems', {
         'labels': labels,
         'sfSymbols': symbols,
         'imageKeys': imageKeys,
+        'badges': badges,
+        'badgeColors': badgeColors,
         'selectedIndex': widget.currentIndex,
       });
       _lastLabels = labels;
       _lastSymbols = symbols;
       _lastImageKeys = imageKeys;
+      _lastBadges = badges;
       // Reload images if they changed
       _loadAndSendImages();
       // Re-measure width in case content changed
@@ -323,6 +541,7 @@ class _CNTabBarState extends State<CNTabBar> {
     _lastSymbols = widget.items.map((e) => e.icon?.name ?? '').toList();
     _lastImageKeys =
         widget.items.map((e) => e.image?.hashCode.toString() ?? '').toList();
+    _lastBadges = widget.items.map((e) => e.formattedBadgeValue ?? '').toList();
   }
 
   Future<void> _loadAndSendImages() async {

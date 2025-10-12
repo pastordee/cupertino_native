@@ -2,6 +2,11 @@ import Flutter
 import UIKit
 
 public class CupertinoNativePlugin: NSObject, FlutterPlugin {
+  private static var actionSheetHandler: CupertinoActionSheetHandler?
+  private static var alertHandler: CupertinoAlertHandler?
+  private static var sheetHandler: CupertinoSheetHandler?
+  private static var customSheetHandler: CupertinoCustomSheetHandler?
+  
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "cupertino_native", binaryMessenger: registrar.messenger())
     let instance = CupertinoNativePlugin()
@@ -32,6 +37,22 @@ public class CupertinoNativePlugin: NSObject, FlutterPlugin {
 
     let navigationBarFactory = CupertinoNavigationBarViewFactory(messenger: registrar.messenger())
     registrar.register(navigationBarFactory, withId: "CupertinoNativeNavigationBar")
+
+    let searchBarFactory = CupertinoSearchBarPlatformViewFactory(messenger: registrar.messenger())
+    registrar.register(searchBarFactory, withId: "CupertinoNativeSearchBar")
+    
+    // Initialize action sheet handler
+    // Get root view controller from the app delegate
+    DispatchQueue.main.async {
+      if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+         let window = windowScene.windows.first,
+         let rootViewController = window.rootViewController {
+        actionSheetHandler = CupertinoActionSheetHandler(messenger: registrar.messenger(), viewController: rootViewController)
+        alertHandler = CupertinoAlertHandler(messenger: registrar.messenger(), viewController: rootViewController)
+        sheetHandler = CupertinoSheetHandler(messenger: registrar.messenger(), viewController: rootViewController)
+        customSheetHandler = CupertinoCustomSheetHandler(messenger: registrar.messenger(), viewController: rootViewController)
+      }
+    }
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

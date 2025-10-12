@@ -2,6 +2,10 @@ import Cocoa
 import FlutterMacOS
 
 public class CupertinoNativePlugin: NSObject, FlutterPlugin {
+  private static var actionSheetHandler: CupertinoActionSheetHandler?
+  private static var alertHandler: CupertinoAlertHandler?
+  private static var sheetHandler: CupertinoSheetHandler?
+  
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "cupertino_native", binaryMessenger: registrar.messenger)
     let instance = CupertinoNativePlugin()
@@ -30,6 +34,18 @@ public class CupertinoNativePlugin: NSObject, FlutterPlugin {
 
     let navigationBarFactory = CupertinoNavigationBarViewFactory(messenger: registrar.messenger)
     registrar.register(navigationBarFactory, withId: "CupertinoNativeNavigationBar")
+
+    let searchBarFactory = CupertinoSearchBarNSViewFactory(messenger: registrar.messenger)
+    registrar.register(searchBarFactory, withId: "CupertinoNativeSearchBar")
+    
+    // Initialize action sheet handler
+    actionSheetHandler = CupertinoActionSheetHandler(messenger: registrar.messenger)
+    
+    // Initialize alert handler
+    alertHandler = CupertinoAlertHandler(messenger: registrar.messenger)
+    
+    // Initialize sheet handler
+    sheetHandler = CupertinoSheetHandler(messenger: registrar.messenger)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

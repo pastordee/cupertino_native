@@ -10,6 +10,13 @@ export 'components/tab_bar.dart';
 export 'components/popup_menu_button.dart';
 export 'components/navigation_bar.dart';
 export 'components/toolbar.dart';
+export 'components/bottom_toolbar.dart';
+export 'components/transforming_toolbar.dart';
+export 'components/search_field.dart';
+export 'components/search_bar.dart';
+export 'components/action_sheet.dart';
+export 'components/alert.dart';
+export 'components/sheet.dart'; // Exports both native_sheet and custom_sheet
 export 'style/sf_symbol.dart';
 export 'style/button_style.dart';
 export 'components/button.dart';

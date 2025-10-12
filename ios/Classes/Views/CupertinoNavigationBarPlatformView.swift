@@ -21,13 +21,16 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     var leadingIcons: [String] = []
     var leadingLabels: [String] = []
     var leadingPaddings: [Double] = []
+    var leadingSpacers: [String] = []
     var middleIcons: [String] = []
     var middleLabels: [String] = []
     var middlePaddings: [Double] = []
+    var middleSpacers: [String] = []
     var middleAlignment: String = "center"
     var trailingIcons: [String] = []
     var trailingLabels: [String] = []
     var trailingPaddings: [Double] = []
+    var trailingSpacers: [String] = []
     var largeTitle: Bool = false
     var transparent: Bool = false
     var isDark: Bool = false
@@ -39,13 +42,16 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       leadingIcons = (dict["leadingIcons"] as? [String]) ?? []
       leadingLabels = (dict["leadingLabels"] as? [String]) ?? []
       leadingPaddings = (dict["leadingPaddings"] as? [Double]) ?? []
+      leadingSpacers = (dict["leadingSpacers"] as? [String]) ?? []
       middleIcons = (dict["middleIcons"] as? [String]) ?? []
       middleLabels = (dict["middleLabels"] as? [String]) ?? []
       middlePaddings = (dict["middlePaddings"] as? [Double]) ?? []
+      middleSpacers = (dict["middleSpacers"] as? [String]) ?? []
       middleAlignment = (dict["middleAlignment"] as? String) ?? "center"
       trailingIcons = (dict["trailingIcons"] as? [String]) ?? []
       trailingLabels = (dict["trailingLabels"] as? [String]) ?? []
       trailingPaddings = (dict["trailingPaddings"] as? [Double]) ?? []
+      trailingSpacers = (dict["trailingSpacers"] as? [String]) ?? []
       pillHeight = dict["pillHeight"] as? Double
       if let v = dict["largeTitle"] as? NSNumber { largeTitle = v.boolValue }
       if let v = dict["transparent"] as? NSNumber { transparent = v.boolValue }
@@ -105,35 +111,177 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       navigationItem.largeTitleDisplayMode = largeTitle ? .always : .never
     }
 
-    // Leading buttons - wrapped in UIBarButtonItem
+        // Leading buttons - group consecutive items, split on flexibleSpace
     if !leadingIcons.isEmpty || !leadingLabels.isEmpty {
-      let buttonGroup = createButtonGroup(
-        icons: leadingIcons,
-        labels: leadingLabels,
-        paddings: leadingPaddings,
-        pillHeight: pillHeight,
-        tint: tint,
-        isDark: isDark,
-        target: self,
-        action: #selector(leadingTapped(_:))
-      )
-      let barItem = UIBarButtonItem(customView: buttonGroup)
-      navigationItem.leftBarButtonItems = [barItem]
+      var barItems: [UIBarButtonItem] = []
+      let count = max(leadingIcons.count, leadingLabels.count)
+      
+      var currentGroupIcons: [String] = []
+      var currentGroupLabels: [String] = []
+      var currentGroupPaddings: [Double] = []
+      var currentGroupIndices: [Int] = []
+      var pendingSpacing: Double = 0.0  // Track spacing to add to next button
+      
+      func finalizeCurrentGroup() {
+        if !currentGroupIcons.isEmpty || !currentGroupLabels.isEmpty {
+          let buttonGroup = createButtonGroup(
+            icons: currentGroupIcons,
+            labels: currentGroupLabels,
+            paddings: currentGroupPaddings,
+            pillHeight: pillHeight,
+            tint: tint,
+            isDark: isDark,
+            target: self,
+            action: #selector(leadingTapped(_:))
+          )
+          
+          // Set tags for all buttons in the group
+          let buttons = findAllButtons(in: buttonGroup)
+          for (idx, button) in buttons.enumerated() {
+            if idx < currentGroupIndices.count {
+              button.tag = currentGroupIndices[idx]
+            }
+          }
+          
+          let barItem = UIBarButtonItem(customView: buttonGroup)
+          barItems.append(barItem)
+          
+          currentGroupIcons = []
+          currentGroupLabels = []
+          currentGroupPaddings = []
+          currentGroupIndices = []
+          pendingSpacing = 0.0
+        }
+      }
+      
+      for i in 0..<count {
+        let spacerType = i < leadingSpacers.count ? leadingSpacers[i] : ""
+        
+        if spacerType == "flexible" {
+          // Finalize current group and add flexible space
+          finalizeCurrentGroup()
+          let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+          barItems.append(flexibleSpace)
+        } else if spacerType == "fixed" {
+          // Fixed space - split between previous and next button
+          let fixedSpaceWidth = i < leadingPaddings.count ? leadingPaddings[i] : 0
+          let halfSpace = fixedSpaceWidth / 2.0
+          
+          // Add half to the previous button if it exists
+          if !currentGroupPaddings.isEmpty {
+            let lastIndex = currentGroupPaddings.count - 1
+            currentGroupPaddings[lastIndex] += halfSpace
+          }
+          
+          // Store the other half for the next button
+          pendingSpacing = halfSpace
+        } else {
+          // Regular button - add to current group
+          let icon = i < leadingIcons.count ? leadingIcons[i] : ""
+          let label = i < leadingLabels.count ? leadingLabels[i] : ""
+          var padding = i < leadingPaddings.count ? leadingPaddings[i] : 0.0
+          
+          // Add any pending spacing from a previous fixedSpace
+          padding += pendingSpacing
+          pendingSpacing = 0.0
+          
+          currentGroupIcons.append(icon)
+          currentGroupLabels.append(label)
+          currentGroupPaddings.append(padding)
+          currentGroupIndices.append(i)
+        }
+      }
+      
+      // Finalize any remaining group
+      finalizeCurrentGroup()
+      
+      navigationItem.leftBarButtonItems = barItems
     }
 
-    // Middle buttons - wrap in UIBarButtonItem with alignment control
+    // Middle buttons - group consecutive items, split on flexibleSpace
     if !middleIcons.isEmpty || !middleLabels.isEmpty {
-      let buttonGroup = createButtonGroup(
-        icons: middleIcons,
-        labels: middleLabels,
-        paddings: middlePaddings,
-        pillHeight: pillHeight,
-        tint: tint,
-        isDark: isDark,
-        target: self,
-        action: #selector(middleTapped(_:))
-      )
-      let middleBarItem = UIBarButtonItem(customView: buttonGroup)
+      var middleBarItems: [UIBarButtonItem] = []
+      let count = max(middleIcons.count, middleLabels.count)
+      
+      var currentGroupIcons: [String] = []
+      var currentGroupLabels: [String] = []
+      var currentGroupPaddings: [Double] = []
+      var currentGroupIndices: [Int] = []
+      var pendingSpacing: Double = 0.0  // Track spacing to add to next button
+      
+      func finalizeCurrentGroup() {
+        if !currentGroupIcons.isEmpty || !currentGroupLabels.isEmpty {
+          let buttonGroup = createButtonGroup(
+            icons: currentGroupIcons,
+            labels: currentGroupLabels,
+            paddings: currentGroupPaddings,
+            pillHeight: pillHeight,
+            tint: tint,
+            isDark: isDark,
+            target: self,
+            action: #selector(middleTapped(_:))
+          )
+          
+          // Set tags for all buttons in the group
+          let buttons = findAllButtons(in: buttonGroup)
+          for (idx, button) in buttons.enumerated() {
+            if idx < currentGroupIndices.count {
+              button.tag = 1000 + currentGroupIndices[idx]
+            }
+          }
+          
+          let barItem = UIBarButtonItem(customView: buttonGroup)
+          middleBarItems.append(barItem)
+          
+          currentGroupIcons = []
+          currentGroupLabels = []
+          currentGroupPaddings = []
+          currentGroupIndices = []
+          pendingSpacing = 0.0
+        }
+      }
+      
+      for i in 0..<count {
+        let spacerType = i < middleSpacers.count ? middleSpacers[i] : ""
+        
+        if spacerType == "flexible" {
+          // Finalize current group and add flexible space
+          finalizeCurrentGroup()
+          let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+          middleBarItems.append(flexibleSpace)
+        } else if spacerType == "fixed" {
+          // Fixed space - split between previous and next button
+          let fixedSpaceWidth = i < middlePaddings.count ? middlePaddings[i] : 0
+          let halfSpace = fixedSpaceWidth / 2.0
+          
+          // Add half to the previous button if it exists
+          if !currentGroupPaddings.isEmpty {
+            let lastIndex = currentGroupPaddings.count - 1
+            currentGroupPaddings[lastIndex] += halfSpace
+          }
+          
+          // Store the other half for the next button
+          pendingSpacing = halfSpace
+        } else {
+          // Regular button - add to current group
+          let icon = i < middleIcons.count ? middleIcons[i] : ""
+          let label = i < middleLabels.count ? middleLabels[i] : ""
+          var padding = i < middlePaddings.count ? middlePaddings[i] : 0
+          
+          // Add any pending spacing from a previous fixedSpace
+          padding += pendingSpacing
+          pendingSpacing = 0.0
+          
+          currentGroupIcons.append(icon)
+          currentGroupLabels.append(label)
+          currentGroupPaddings.append(padding)
+          currentGroupIndices.append(i)
+        }
+      }
+      
+      // Finalize any remaining group
+      finalizeCurrentGroup()
+      
       let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
       
       let hasLeading = navigationItem.leftBarButtonItems != nil && !navigationItem.leftBarButtonItems!.isEmpty
@@ -142,7 +290,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       // Apply alignment based on middleAlignment parameter
       if middleAlignment == "leading" && hasLeading {
         // Position close to leading - append right after leading, then add flexible space
-        navigationItem.leftBarButtonItems?.append(middleBarItem)
+        navigationItem.leftBarButtonItems?.append(contentsOf: middleBarItems)
         navigationItem.leftBarButtonItems?.append(flexibleSpace)
       } else if middleAlignment == "trailing" && hasTrailing {
         // Position close to trailing - add flexible space first, then middle to right items
@@ -151,7 +299,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
         } else {
           navigationItem.leftBarButtonItems = [flexibleSpace]
         }
-        navigationItem.rightBarButtonItems = [middleBarItem]
+        navigationItem.rightBarButtonItems = middleBarItems
       } else {
         // Center alignment (default) - flexible space on both sides
         // Also use center if alignment is leading/trailing but no leading/trailing exists
@@ -159,10 +307,10 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
         
         if hasLeading {
           navigationItem.leftBarButtonItems?.append(flexibleSpace)
-          navigationItem.leftBarButtonItems?.append(middleBarItem)
+          navigationItem.leftBarButtonItems?.append(contentsOf: middleBarItems)
           navigationItem.leftBarButtonItems?.append(flexibleSpace2)
         } else {
-          navigationItem.leftBarButtonItems = [flexibleSpace, middleBarItem, flexibleSpace2]
+          navigationItem.leftBarButtonItems = [flexibleSpace] + middleBarItems + [flexibleSpace2]
         }
       }
     }
@@ -183,26 +331,96 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       navigationBar.tintColor = tintColor
     }
 
-    // Trailing buttons - wrapped in UIBarButtonItem
+    // Trailing buttons - group consecutive items, split on flexibleSpace
     if !trailingIcons.isEmpty || !trailingLabels.isEmpty {
-      let buttonGroup = createButtonGroup(
-        icons: trailingIcons,
-        labels: trailingLabels,
-        paddings: trailingPaddings,
-        pillHeight: pillHeight,
-        tint: tint,
-        isDark: isDark,
-        target: self,
-        action: #selector(trailingTapped(_:))
-      )
-      let barItem = UIBarButtonItem(customView: buttonGroup)
+      var trailingBarItems: [UIBarButtonItem] = []
+      let count = max(trailingIcons.count, trailingLabels.count)
+      
+      var currentGroupIcons: [String] = []
+      var currentGroupLabels: [String] = []
+      var currentGroupPaddings: [Double] = []
+      var currentGroupIndices: [Int] = []
+      var pendingSpacing: Double = 0.0  // Track spacing to add to next button
+      
+      func finalizeCurrentGroup() {
+        if !currentGroupIcons.isEmpty || !currentGroupLabels.isEmpty {
+          let buttonGroup = createButtonGroup(
+            icons: currentGroupIcons,
+            labels: currentGroupLabels,
+            paddings: currentGroupPaddings,
+            pillHeight: pillHeight,
+            tint: tint,
+            isDark: isDark,
+            target: self,
+            action: #selector(trailingTapped(_:))
+          )
+          
+          // Set tags for all buttons in the group
+          let buttons = findAllButtons(in: buttonGroup)
+          for (idx, button) in buttons.enumerated() {
+            if idx < currentGroupIndices.count {
+              button.tag = 2000 + currentGroupIndices[idx]
+            }
+          }
+          
+          let barItem = UIBarButtonItem(customView: buttonGroup)
+          trailingBarItems.append(barItem)
+          
+          currentGroupIcons = []
+          currentGroupLabels = []
+          currentGroupPaddings = []
+          currentGroupIndices = []
+          pendingSpacing = 0.0
+        }
+      }
+      
+      for i in 0..<count {
+        let spacerType = i < trailingSpacers.count ? trailingSpacers[i] : ""
+        
+        if spacerType == "flexible" {
+          // Finalize current group and add flexible space
+          finalizeCurrentGroup()
+          let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+          trailingBarItems.append(flexibleSpace)
+        } else if spacerType == "fixed" {
+          // Fixed space - split between previous and next button
+          let fixedSpaceWidth = i < trailingPaddings.count ? trailingPaddings[i] : 0
+          let halfSpace = fixedSpaceWidth / 2.0
+          
+          // Add half to the previous button if it exists
+          if !currentGroupPaddings.isEmpty {
+            let lastIndex = currentGroupPaddings.count - 1
+            currentGroupPaddings[lastIndex] += halfSpace
+          }
+          
+          // Store the other half for the next button
+          pendingSpacing = halfSpace
+        } else {
+          // Regular button - add to current group
+          let icon = i < trailingIcons.count ? trailingIcons[i] : ""
+          let label = i < trailingLabels.count ? trailingLabels[i] : ""
+          var padding = i < trailingPaddings.count ? trailingPaddings[i] : 0
+          
+          // Add any pending spacing from a previous fixedSpace
+          padding += pendingSpacing
+          pendingSpacing = 0.0
+          
+          currentGroupIcons.append(icon)
+          currentGroupLabels.append(label)
+          currentGroupPaddings.append(padding)
+          currentGroupIndices.append(i)
+        }
+      }
+      
+      // Finalize any remaining group
+      finalizeCurrentGroup()
       
       if middleAlignment == "trailing" && navigationItem.rightBarButtonItems != nil {
         // Middle is positioned close to trailing, append trailing after middle
-        navigationItem.rightBarButtonItems?.append(barItem)
+        navigationItem.rightBarButtonItems?.append(contentsOf: trailingBarItems)
       } else {
         // Standard trailing position
-        navigationItem.rightBarButtonItems = [barItem]
+        navigationItem.rightBarButtonItems = trailingBarItems
       }
     }
 
@@ -294,16 +512,41 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
 
   func view() -> UIView { container }
 
+  // Helper function to find a UIButton in a view hierarchy
+  private func findButton(in view: UIView) -> UIButton? {
+    if let button = view as? UIButton {
+      return button
+    }
+    for subview in view.subviews {
+      if let button = findButton(in: subview) {
+        return button
+      }
+    }
+    return nil
+  }
+  
+  // Helper function to find all UIButtons in a view hierarchy
+  private func findAllButtons(in view: UIView) -> [UIButton] {
+    var buttons: [UIButton] = []
+    if let button = view as? UIButton {
+      buttons.append(button)
+    }
+    for subview in view.subviews {
+      buttons.append(contentsOf: findAllButtons(in: subview))
+    }
+    return buttons
+  }
+
   @objc private func leadingTapped(_ sender: UIButton) {
     channel.invokeMethod("leadingTapped", arguments: ["index": sender.tag])
   }
 
   @objc private func middleTapped(_ sender: UIButton) {
-    channel.invokeMethod("middleTapped", arguments: ["index": sender.tag])
+    channel.invokeMethod("middleTapped", arguments: ["index": sender.tag - 1000])
   }
 
   @objc private func trailingTapped(_ sender: UIButton) {
-    channel.invokeMethod("trailingTapped", arguments: ["index": sender.tag])
+    channel.invokeMethod("trailingTapped", arguments: ["index": sender.tag - 2000])
   }
   
   @objc private func buttonTouchDown(_ sender: UIButton) {

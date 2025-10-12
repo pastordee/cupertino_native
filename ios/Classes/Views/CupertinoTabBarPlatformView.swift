@@ -11,6 +11,8 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
   private var rightCountVal: Int = 1
   private var currentLabels: [String] = []
   private var currentSymbols: [String] = []
+  private var currentBadges: [String] = []
+  private var currentBadgeColors: [Int?] = []
   private var customImages: [Int: UIImage] = [:]
   private var customImageSizes: [Int: CGFloat] = [:]
   private var leftInsetVal: CGFloat = 0
@@ -25,6 +27,8 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
     var symbols: [String] = []
     var sizes: [NSNumber] = [] // ignored; use system metrics
     var colors: [NSNumber] = [] // ignored; use tintColor
+    var badges: [String] = []
+    var badgeColors: [NSNumber] = []
     var selectedIndex: Int = 0
     var isDark: Bool = false
     var tint: UIColor? = nil
@@ -39,6 +43,8 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
       symbols = (dict["sfSymbols"] as? [String]) ?? []
       sizes = (dict["sfSymbolSizes"] as? [NSNumber]) ?? []
       colors = (dict["sfSymbolColors"] as? [NSNumber]) ?? []
+      badges = (dict["badges"] as? [String]) ?? []
+      badgeColors = (dict["badgeColors"] as? [NSNumber]) ?? []
       if let v = dict["selectedIndex"] as? NSNumber { selectedIndex = v.intValue }
       if let v = dict["isDark"] as? NSNumber { isDark = v.boolValue }
       if let style = dict["style"] as? [String: Any] {
@@ -56,10 +62,6 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
     container.backgroundColor = .clear
     if #available(iOS 13.0, *) { container.overrideUserInterfaceStyle = isDark ? .dark : .light }
 
-    let appearance: UITabBarAppearance? = {
-    if #available(iOS 13.0, *) { let ap = UITabBarAppearance(); ap.configureWithDefaultBackground(); return ap }
-    return nil
-  }()
     func buildItems(_ range: Range<Int>) -> [UITabBarItem] {
       var items: [UITabBarItem] = []
       for i in range {
@@ -71,11 +73,31 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
           image = UIImage(systemName: symbols[i])
         }
         let title = (i < labels.count) ? labels[i] : nil
-        items.append(UITabBarItem(title: title, image: image, selectedImage: image))
+        let item = UITabBarItem(title: title, image: image, selectedImage: image)
+        // Apply badge if present
+        if i < badges.count && !badges[i].isEmpty {
+          item.badgeValue = badges[i]
+          // Apply badge color if available (iOS 10+)
+          if #available(iOS 10.0, *), i < badgeColors.count, let colorNum = badgeColors[i] as? NSNumber {
+            item.badgeColor = Self.colorFromARGB(colorNum.intValue)
+          }
+        }
+        items.append(item)
       }
       return items
     }
     let count = max(labels.count, symbols.count)
+    
+    // Create appearance for iOS 13+
+    let appearance: UITabBarAppearance? = {
+      if #available(iOS 13.0, *) {
+        let ap = UITabBarAppearance()
+        ap.configureWithDefaultBackground()
+        return ap
+      }
+      return nil
+    }()
+    
     if split && count > rightCount {
       let leftEnd = count - rightCount
       let left = UITabBar(frame: .zero)
@@ -155,6 +177,8 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
     self.rightCountVal = rightCount
     self.currentLabels = labels
     self.currentSymbols = symbols
+    self.currentBadges = badges
+    self.currentBadgeColors = badgeColors.map { $0 as? Int }
     self.leftInsetVal = leftInset
     self.rightInsetVal = rightInset
 channel.setMethodCallHandler { [weak self] call, result in
@@ -171,9 +195,13 @@ channel.setMethodCallHandler { [weak self] call, result in
         if let args = call.arguments as? [String: Any] {
           let labels = (args["labels"] as? [String]) ?? []
           let symbols = (args["sfSymbols"] as? [String]) ?? []
+          let badges = (args["badges"] as? [String]) ?? []
+          let badgeColors = (args["badgeColors"] as? [NSNumber]) ?? []
           let selectedIndex = (args["selectedIndex"] as? NSNumber)?.intValue ?? 0
           self.currentLabels = labels
           self.currentSymbols = symbols
+          self.currentBadges = badges
+          self.currentBadgeColors = badgeColors.map { $0 as? Int }
           func buildItems(_ range: Range<Int>) -> [UITabBarItem] {
             var items: [UITabBarItem] = []
             for i in range {
@@ -185,7 +213,16 @@ channel.setMethodCallHandler { [weak self] call, result in
                 image = UIImage(systemName: symbols[i])
               }
               let title = (i < labels.count) ? labels[i] : nil
-              items.append(UITabBarItem(title: title, image: image, selectedImage: image))
+              let item = UITabBarItem(title: title, image: image, selectedImage: image)
+              // Apply badge if present
+              if i < badges.count && !badges[i].isEmpty {
+                item.badgeValue = badges[i]
+                // Apply badge color if available (iOS 10+)
+                if #available(iOS 10.0, *), i < badgeColors.count, let colorNum = badgeColors[i] as? NSNumber {
+                  item.badgeColor = Self.colorFromARGB(colorNum.intValue)
+                }
+              }
+              items.append(item)
             }
             return items
           }

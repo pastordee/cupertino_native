@@ -9,6 +9,10 @@ import 'demos/popup_menu_button.dart';
 import 'demos/button.dart';
 import 'demos/navigation_bar.dart';
 import 'demos/toolbar.dart';
+import 'demos/native_search_bar.dart';
+import 'demos/action_sheet.dart';
+import 'demos/native_sheet_demo.dart';
+import 'demos/custom_sheet_demo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -242,6 +246,56 @@ class HomePage extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (_) => const TabBarDemoPage()),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Native Search Bar'),
+                leading: CNIcon(
+                  symbol: CNSymbol('magnifyingglass.circle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(builder: (_) => const NativeSearchBarDemoPage()),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Action Sheet'),
+                leading: CNIcon(
+                  symbol: CNSymbol('list.bullet.rectangle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(builder: (_) => const ActionSheetDemoPage()),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Native Sheets'),
+                subtitle: Text('UIKit rendering'),
+                leading: CNIcon(
+                  symbol: CNSymbol('rectangle.on.rectangle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(builder: (_) => const NativeSheetDemoPage()),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Custom Widget Sheets'),
+                subtitle: Text('Flutter overlay rendering'),
+                leading: CNIcon(
+                  symbol: CNSymbol('square.stack.3d.down.right', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(builder: (_) => const CustomSheetDemoPage()),
                   );
                 },
               ),
