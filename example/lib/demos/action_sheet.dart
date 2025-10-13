@@ -122,7 +122,7 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
         ),
       ),
     );
-  }
+  } 
 
   Widget _buildInfoSection() {
     return Container(

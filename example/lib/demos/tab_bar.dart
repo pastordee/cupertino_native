@@ -115,6 +115,48 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     );
   }
 
+   // Method 2: Using CupertinoButton with Flutter Icon (works but different look)
+  Widget _buildLastTabIconWithButton() {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          print('✅ CupertinoButton pressed! Last tab index: $_lastTabIndex');
+          // Tapping the icon returns to that tab and collapses search
+          setState(() {
+            _isSearchExpanded = false;
+            _index = _lastTabIndex;
+            _searchText = '';
+          });
+          _controller.animateTo(_lastTabIndex);
+        },
+        child: Icon(
+          _getLastTabIconData(),
+          size: 24,
+          color: CupertinoColors.systemBlue,
+        ),
+      ),
+    );
+  }
+
+
+
+  // Get the IconData for the last selected tab (for CupertinoButton approach)
+  IconData _getLastTabIconData() {
+    switch (_lastTabIndex) {
+      case 0:
+        return CupertinoIcons.house_fill;
+      case 1:
+        return CupertinoIcons.dot_radiowaves_left_right;
+      case 2:
+        return CupertinoIcons.music_note_list;
+      default:
+        return CupertinoIcons.house_fill;
+    }
+  }
+
   // Get the CNSymbol for the last selected tab
   CNSymbol _getLastTabIconSymbol() {
     CNSymbol symbol;
@@ -135,19 +177,6 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     return symbol;
   }
 
-  // Get the IconData for the last selected tab (for CupertinoButton approach)
-  IconData _getLastTabIconData() {
-    switch (_lastTabIndex) {
-      case 0:
-        return CupertinoIcons.house_fill;
-      case 1:
-        return CupertinoIcons.dot_radiowaves_left_right;
-      case 2:
-        return CupertinoIcons.music_note_list;
-      default:
-        return CupertinoIcons.house_fill;
-    }
-  }
 
     // Method 1: Using CNToolbar with native SF Symbols (native look with blur)
   // NOTE: When CNToolbar has only one item, use 'trailing' to position it on the left side
@@ -179,31 +208,7 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     );
   }
 
-  // Method 2: Using CupertinoButton with Flutter Icon (works but different look)
-  Widget _buildLastTabIconWithButton() {
-    return SizedBox(
-      width: 44,
-      height: 44,
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () {
-          print('✅ CupertinoButton pressed! Last tab index: $_lastTabIndex');
-          // Tapping the icon returns to that tab and collapses search
-          setState(() {
-            _isSearchExpanded = false;
-            _index = _lastTabIndex;
-            _searchText = '';
-          });
-          _controller.animateTo(_lastTabIndex);
-        },
-        child: Icon(
-          _getLastTabIconData(),
-          size: 24,
-          color: CupertinoColors.systemBlue,
-        ),
-      ),
-    );
-  }
+ 
 
   Widget _buildExpandedSearch() {
     return SafeArea(
@@ -216,8 +221,7 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
             // METHOD 1: CNToolbar with native SF Symbols (unified native look with blur)
             _buildLastTabIconWithToolbar(),
             
-            // METHOD 2: CupertinoButton with Flutter Icon (uncomment to compare)
-            // _buildLastTabIconWithButton(),
+            
             
             const SizedBox(width: 1),
             // Expanded search bar
