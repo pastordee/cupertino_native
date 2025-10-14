@@ -5,6 +5,7 @@
 // - CNNativeSheet for native UIKit rendering
 // - CNCustomSheet for custom Flutter widget rendering
 
+import 'package:flutter/widgets.dart';
 import 'native_sheet.dart';
 
 // Re-export everything from both modules
@@ -12,7 +13,7 @@ export 'native_sheet.dart';
 export 'custom_sheet.dart';
 
 /// Backward compatibility class for CNSheet
-/// 
+///
 /// Delegates to CNNativeSheet for native rendering.
 /// This maintains API compatibility with existing code.
 class CNSheet {
@@ -41,14 +42,15 @@ class CNSheet {
       prefersGrabberVisible: prefersGrabberVisible,
       isModal: isModal,
       prefersEdgeAttachedInCompactHeight: prefersEdgeAttachedInCompactHeight,
-      widthFollowsPreferredContentSizeWhenEdgeAttached: widthFollowsPreferredContentSizeWhenEdgeAttached,
+      widthFollowsPreferredContentSizeWhenEdgeAttached:
+          widthFollowsPreferredContentSizeWhenEdgeAttached,
       preferredCornerRadius: preferredCornerRadius,
       itemBackgroundColor: itemBackgroundColor,
       itemTextColor: itemTextColor,
       itemTintColor: itemTintColor,
     );
   }
-  
+
   /// Shows a sheet with custom header (delegates to CNNativeSheet)
   static Future<int?> showWithCustomHeader({
     required context,
@@ -85,7 +87,8 @@ class CNSheet {
       prefersGrabberVisible: prefersGrabberVisible,
       isModal: isModal,
       prefersEdgeAttachedInCompactHeight: prefersEdgeAttachedInCompactHeight,
-      widthFollowsPreferredContentSizeWhenEdgeAttached: widthFollowsPreferredContentSizeWhenEdgeAttached,
+      widthFollowsPreferredContentSizeWhenEdgeAttached:
+          widthFollowsPreferredContentSizeWhenEdgeAttached,
       preferredCornerRadius: preferredCornerRadius,
       headerTitleSize: headerTitleSize,
       headerTitleWeight: headerTitleWeight,
@@ -101,6 +104,59 @@ class CNSheet {
       itemBackgroundColor: itemBackgroundColor,
       itemTextColor: itemTextColor,
       itemTintColor: itemTintColor,
+    );
+  }
+
+  /// Shows a native sheet with custom Flutter widget content using UiKitView (delegates to CNNativeSheet)
+  ///
+  /// This is the ULTIMATE solution combining:
+  /// - Native UISheetPresentationController (real iOS sheet)
+  /// - Custom Flutter widgets via UiKitView
+  /// - Non-modal behavior (interact with background)
+  static Future<void> showWithCustomHeaderUiKitView({
+    required context,
+    required String title,
+    required Widget Function(BuildContext) builder,
+    List<CNSheetDetent> detents = const [CNSheetDetent.large],
+    bool prefersGrabberVisible = true,
+    bool isModal = false,
+    bool prefersEdgeAttachedInCompactHeight = false,
+    bool widthFollowsPreferredContentSizeWhenEdgeAttached = false,
+    double? preferredCornerRadius,
+    double? headerTitleSize,
+    headerTitleWeight,
+    headerTitleColor,
+    double? headerHeight,
+    headerBackgroundColor,
+    bool showHeaderDivider = true,
+    headerDividerColor,
+    String closeButtonPosition = 'trailing',
+    String closeButtonIcon = 'xmark',
+    double? closeButtonSize,
+    closeButtonColor,
+  }) {
+    return CNNativeSheet.showWithCustomHeaderUiKitView(
+      context: context,
+      title: title,
+      builder: builder,
+      detents: detents,
+      prefersGrabberVisible: prefersGrabberVisible,
+      isModal: isModal,
+      prefersEdgeAttachedInCompactHeight: prefersEdgeAttachedInCompactHeight,
+      widthFollowsPreferredContentSizeWhenEdgeAttached:
+          widthFollowsPreferredContentSizeWhenEdgeAttached,
+      preferredCornerRadius: preferredCornerRadius,
+      headerTitleSize: headerTitleSize,
+      headerTitleWeight: headerTitleWeight,
+      headerTitleColor: headerTitleColor,
+      headerHeight: headerHeight,
+      headerBackgroundColor: headerBackgroundColor,
+      showHeaderDivider: showHeaderDivider,
+      headerDividerColor: headerDividerColor,
+      closeButtonPosition: closeButtonPosition,
+      closeButtonIcon: closeButtonIcon,
+      closeButtonSize: closeButtonSize,
+      closeButtonColor: closeButtonColor,
     );
   }
 }

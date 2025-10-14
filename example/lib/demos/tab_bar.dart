@@ -3,9 +3,9 @@ import 'package:flutter/material.dart' show TabController, TabBarView;
 import 'package:cupertino_native/cupertino_native.dart';
 
 /// Demonstrates CNTabBar with search integration.
-/// 
+///
 /// IMPORTANT: When using CNToolbar with a SINGLE item, use `trailing` instead of `leading`.
-/// This is iOS native behavior - single items in rightBarButtonItems position and respond 
+/// This is iOS native behavior - single items in rightBarButtonItems position and respond
 /// better than leftBarButtonItems. See TOOLBAR_SINGLE_ITEM_BEHAVIOR.md for details.
 class TabBarDemoPage extends StatefulWidget {
   const TabBarDemoPage({super.key});
@@ -73,10 +73,7 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
       // Using split mode to create visual separation for search tab
       // This matches the iOS pattern where search is on the trailing edge
       items: const [
-        CNTabBarItem(
-          label: 'Home',
-          icon: CNSymbol('house.fill'),
-        ),
+        CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
         CNTabBarItem(
           label: 'Radio',
           icon: CNSymbol('dot.radiowaves.left.and.right'),
@@ -115,7 +112,7 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     );
   }
 
-   // Method 2: Using CupertinoButton with Flutter Icon (works but different look)
+  // Method 2: Using CupertinoButton with Flutter Icon (works but different look)
   Widget _buildLastTabIconWithButton() {
     return SizedBox(
       width: 44,
@@ -140,8 +137,6 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
       ),
     );
   }
-
-
 
   // Get the IconData for the last selected tab (for CupertinoButton approach)
   IconData _getLastTabIconData() {
@@ -177,22 +172,26 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     return symbol;
   }
 
-
-    // Method 1: Using CNToolbar with native SF Symbols (native look with blur)
+  // Method 1: Using CNToolbar with native SF Symbols (native look with blur)
   // NOTE: When CNToolbar has only one item, use 'trailing' to position it on the left side
   // This is iOS native behavior - 'trailing' in a single-item toolbar positions it naturally
   Widget _buildLastTabIconWithToolbar() {
     final symbol = _getLastTabIconSymbol();
-    print('🎨 Building toolbar with symbol: ${symbol.name} for tab $_lastTabIndex');
-    
+    print(
+      '🎨 Building toolbar with symbol: ${symbol.name} for tab $_lastTabIndex',
+    );
+
     return SizedBox(
       width: 80, // Wider for better touch target
       child: CNToolbar(
-        trailing: [ // Use 'trailing' for single items to position on left
+        trailing: [
+          // Use 'trailing' for single items to position on left
           CNToolbarAction(
             icon: symbol,
             onPressed: () {
-              print('� Toolbar button pressed! Returning to tab $_lastTabIndex');
+              print(
+                '� Toolbar button pressed! Returning to tab $_lastTabIndex',
+              );
               setState(() {
                 _isSearchExpanded = false;
                 _index = _lastTabIndex;
@@ -208,21 +207,17 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
     );
   }
 
- 
-
   Widget _buildExpandedSearch() {
     return SafeArea(
       top: false,
       child: Container(
         // color: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.95),
-        padding: const EdgeInsets.symmetric(horizontal: 1, vertical:1),
+        padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
         child: Row(
           children: [
             // METHOD 1: CNToolbar with native SF Symbols (unified native look with blur)
             _buildLastTabIconWithToolbar(),
-            
-            
-            
+
             const SizedBox(width: 1),
             // Expanded search bar
             Expanded(

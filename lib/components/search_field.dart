@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 
 /// An iOS-style search field that follows Apple HIG best practices.
-/// 
+///
 /// **Apple HIG Best Practices:**
 /// - Use descriptive placeholder text (e.g., "Shows, Movies, and More")
 /// - Search immediately as user types (searchImmediately: true)
 /// - Show suggested search terms before or while typing
 /// - Provide scope controls for filtering categories
 /// - Support tokens for filtering by common terms
-/// 
+///
 /// Example:
 /// ```dart
 /// CNSearchField(
@@ -104,7 +104,7 @@ class _CNSearchFieldState extends State<CNSearchField> {
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.controller == null) {
       _controller = TextEditingController();
       _ownsController = true;
@@ -246,14 +246,14 @@ class _CNSearchFieldState extends State<CNSearchField> {
         },
         children: Map.fromEntries(
           widget.scopeOptions.asMap().entries.map(
-                (entry) => MapEntry(
-                  entry.key,
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(entry.value),
-                  ),
-                ),
+            (entry) => MapEntry(
+              entry.key,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(entry.value),
               ),
+            ),
+          ),
         ),
       ),
     );
@@ -289,9 +289,11 @@ class _CNSearchFieldState extends State<CNSearchField> {
               ],
             ),
           ),
-          
+
           // Suggestion items
-          ...widget.suggestions.map((suggestion) => _buildSuggestionItem(suggestion)),
+          ...widget.suggestions.map(
+            (suggestion) => _buildSuggestionItem(suggestion),
+          ),
         ],
       ),
     );

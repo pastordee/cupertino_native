@@ -5,7 +5,8 @@ class NativeSearchBarDemoPage extends StatefulWidget {
   const NativeSearchBarDemoPage({super.key});
 
   @override
-  State<NativeSearchBarDemoPage> createState() => _NativeSearchBarDemoPageState();
+  State<NativeSearchBarDemoPage> createState() =>
+      _NativeSearchBarDemoPageState();
 }
 
 class _NativeSearchBarDemoPageState extends State<NativeSearchBarDemoPage> {
@@ -69,49 +70,37 @@ class _NativeSearchBarDemoPageState extends State<NativeSearchBarDemoPage> {
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    _buildInfoCard(
-                      'Native iOS Implementation',
-                      [
-                        '✓ Real UISearchBar (not Flutter widget)',
-                        '✓ Native iOS search behavior',
-                        '✓ Native keyboard handling',
-                        '✓ Native scope bar (segmented control)',
-                        '✓ Native cancel button animation',
-                        '✓ Platform channel communication',
-                      ],
-                    ),
+                    _buildInfoCard('Native iOS Implementation', [
+                      '✓ Real UISearchBar (not Flutter widget)',
+                      '✓ Native iOS search behavior',
+                      '✓ Native keyboard handling',
+                      '✓ Native scope bar (segmented control)',
+                      '✓ Native cancel button animation',
+                      '✓ Platform channel communication',
+                    ]),
                     const SizedBox(height: 16),
-                    _buildInfoCard(
-                      'Current State',
-                      [
-                        'Search Text: "${_searchText.isEmpty ? "(empty)" : _searchText}"',
-                        'Selected Scope: ${_scopeTitles[_selectedScope]}',
-                        'Last Action: $_lastAction',
-                      ],
-                    ),
+                    _buildInfoCard('Current State', [
+                      'Search Text: "${_searchText.isEmpty ? "(empty)" : _searchText}"',
+                      'Selected Scope: ${_scopeTitles[_selectedScope]}',
+                      'Last Action: $_lastAction',
+                    ]),
                     const SizedBox(height: 16),
-                    _buildInfoCard(
-                      'Apple HIG Features',
-                      [
-                        '✓ Descriptive placeholder ("Search in Mail")',
-                        '✓ Scope bar for filtering categories',
-                        '✓ Cancel button for quick dismissal',
-                        '✓ Search button in return key',
-                        '✓ Auto-correction enabled',
-                        '✓ No auto-capitalization (for emails)',
-                      ],
-                    ),
+                    _buildInfoCard('Apple HIG Features', [
+                      '✓ Descriptive placeholder ("Search in Mail")',
+                      '✓ Scope bar for filtering categories',
+                      '✓ Cancel button for quick dismissal',
+                      '✓ Search button in return key',
+                      '✓ Auto-correction enabled',
+                      '✓ No auto-capitalization (for emails)',
+                    ]),
                     const SizedBox(height: 16),
-                    _buildInfoCard(
-                      'Try These Features',
-                      [
-                        '• Type to search - text updates immediately',
-                        '• Tap Search button on keyboard',
-                        '• Switch between scopes',
-                        '• Tap Cancel to clear and dismiss',
-                        '• Notice the native iOS animations',
-                      ],
-                    ),
+                    _buildInfoCard('Try These Features', [
+                      '• Type to search - text updates immediately',
+                      '• Tap Search button on keyboard',
+                      '• Switch between scopes',
+                      '• Tap Cancel to clear and dismiss',
+                      '• Notice the native iOS animations',
+                    ]),
                   ],
                 ),
               ),
@@ -139,39 +128,38 @@ class _NativeSearchBarDemoPageState extends State<NativeSearchBarDemoPage> {
             padding: const EdgeInsets.all(16),
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ...items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: CupertinoColors.separator.resolveFrom(context),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: item.startsWith('✓')
+                            ? CupertinoColors.activeGreen
+                            : CupertinoColors.label.resolveFrom(context),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          ...items.map((item) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: CupertinoColors.separator.resolveFrom(context),
-                      width: 0.5,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: item.startsWith('✓')
-                              ? CupertinoColors.activeGreen
-                              : CupertinoColors.label.resolveFrom(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )),
         ],
       ),
     );

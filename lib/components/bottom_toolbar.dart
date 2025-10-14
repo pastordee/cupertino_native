@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 
 /// A native iOS bottom toolbar with expandable search.
-/// 
+///
 /// This component implements the "Search in a bottom toolbar" pattern from Apple HIG.
 /// When search is tapped, it expands to fill the toolbar while showing the current context.
-/// 
+///
 /// Example:
 /// ```dart
 /// CNBottomToolbar(
@@ -72,7 +72,8 @@ class CNBottomToolbar extends StatefulWidget {
   State<CNBottomToolbar> createState() => _CNBottomToolbarState();
 }
 
-class _CNBottomToolbarState extends State<CNBottomToolbar> with SingleTickerProviderStateMixin {
+class _CNBottomToolbarState extends State<CNBottomToolbar>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _searchExpandAnimation;
   final FocusNode _focusNode = FocusNode();
@@ -105,20 +106,20 @@ class _CNBottomToolbarState extends State<CNBottomToolbar> with SingleTickerProv
     setState(() {
       _isSearchExpanded = _focusNode.hasFocus;
     });
-    
+
     if (_focusNode.hasFocus) {
       _animationController.forward();
     } else {
       _animationController.reverse();
     }
-    
+
     widget.onSearchFocusChanged?.call(_focusNode.hasFocus);
   }
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.backgroundColor ?? 
-        CupertinoTheme.of(context).barBackgroundColor;
+    final backgroundColor =
+        widget.backgroundColor ?? CupertinoTheme.of(context).barBackgroundColor;
 
     return Container(
       height: widget.height,
@@ -138,22 +139,26 @@ class _CNBottomToolbarState extends State<CNBottomToolbar> with SingleTickerProv
             children: [
               // Leading: Menu button OR current tab icon when expanded
               _buildLeadingArea(),
-              
+
               // Search field (expands when focused)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   child: CupertinoSearchTextField(
                     controller: _textController,
                     focusNode: _focusNode,
                     placeholder: widget.searchPlaceholder,
                     onChanged: widget.onSearchChanged,
                     onSubmitted: widget.onSearchSubmitted,
-                    backgroundColor: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                    backgroundColor: CupertinoColors.tertiarySystemFill
+                        .resolveFrom(context),
                   ),
                 ),
               ),
-              
+
               // Trailing button (fades out when search expands)
               if (widget.trailingAction != null)
                 Opacity(
@@ -199,11 +204,7 @@ class _CNBottomToolbarState extends State<CNBottomToolbar> with SingleTickerProv
     if (widget.leadingAction != null) {
       return Padding(
         padding: const EdgeInsets.only(left: 8),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: widget.leadingAction!,
-        ),
+        child: SizedBox(width: 44, height: 44, child: widget.leadingAction!),
       );
     }
 
@@ -213,11 +214,7 @@ class _CNBottomToolbarState extends State<CNBottomToolbar> with SingleTickerProv
   Widget _buildTrailingButton() {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: widget.trailingAction!,
-      ),
+      child: SizedBox(width: 44, height: 44, child: widget.trailingAction!),
     );
   }
 }

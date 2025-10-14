@@ -13,10 +13,11 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
   CNToolbarMiddleAlignment _middleAlignment = CNToolbarMiddleAlignment.center;
   bool _isSearchExpanded = false;
   String _searchText = '';
-  
+
   // Remember the toolbar state before search expansion
   bool _lastTransparentState = true;
-  CNToolbarMiddleAlignment _lastMiddleAlignment = CNToolbarMiddleAlignment.center;
+  CNToolbarMiddleAlignment _lastMiddleAlignment =
+      CNToolbarMiddleAlignment.center;
 
   @override
   Widget build(BuildContext context) {
@@ -40,21 +41,37 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
           // Content
           SafeArea(
             child: ListView(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 80, bottom: 80),
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 80,
+                bottom: 80,
+              ),
               children: [
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.8),
+                    color: CupertinoColors.systemBackground
+                        .resolveFrom(context)
+                        .withOpacity(0.8),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Liquid Glass Toolbar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Liquid Glass Toolbar',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 12),
-                      Text('The toolbar above uses native UINavigationBar (iOS) and NSToolbar (macOS) with translucent blur effects.', style: TextStyle(fontSize: 16)),
+                      Text(
+                        'The toolbar above uses native UINavigationBar (iOS) and NSToolbar (macOS) with translucent blur effects.',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ],
                   ),
                 ),
@@ -62,7 +79,9 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.8),
+                    color: CupertinoColors.systemBackground
+                        .resolveFrom(context)
+                        .withOpacity(0.8),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -71,16 +90,25 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                         children: [
                           const Text('Transparent Mode'),
                           const Spacer(),
-                          CupertinoSwitch(value: _isTransparent, onChanged: (v) => setState(() => _isTransparent = v)),
+                          CupertinoSwitch(
+                            value: _isTransparent,
+                            onChanged: (v) =>
+                                setState(() => _isTransparent = v),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Middle Alignment', style: TextStyle(fontWeight: FontWeight.w600)),
+                          const Text(
+                            'Middle Alignment',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           const SizedBox(height: 8),
-                          CupertinoSlidingSegmentedControl<CNToolbarMiddleAlignment>(
+                          CupertinoSlidingSegmentedControl<
+                            CNToolbarMiddleAlignment
+                          >(
                             groupValue: _middleAlignment,
                             children: const {
                               CNToolbarMiddleAlignment.leading: Padding(
@@ -132,20 +160,22 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
               child: CNToolbar(
                 middleAlignment: _middleAlignment,
                 tint: CupertinoColors.label,
-               
+
                 leading: [
                   CNToolbarAction(
                     label: 'Edit',
                     onPressed: () => print('Edit tapped'),
                   ),
-                  const CNToolbarAction.fixedSpace(12), // Fixed space between text labels
+                  const CNToolbarAction.fixedSpace(
+                    12,
+                  ), // Fixed space between text labels
                   CNToolbarAction(
                     label: 'Share',
                     padding: 2,
                     onPressed: () => print('Share tapped'),
                   ),
                 ],
-               
+
                 middle: [
                   CNToolbarAction(
                     icon: CNSymbol('pencil', size: 30),
@@ -158,7 +188,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                     onPressed: () => print('Delete tapped'),
                   ),
                 ],
-                
+
                 trailing: [
                   CNToolbarAction(
                     icon: CNSymbol('ellipsis', size: 30),
@@ -170,8 +200,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                     onPressed: () => print('Play tapped'),
                   ),
                 ],
-                
-                
+
                 transparent: _isTransparent,
               ),
             ),
@@ -285,4 +314,3 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
     );
   }
 }
-

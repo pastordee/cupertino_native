@@ -34,7 +34,10 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
             const SizedBox(height: 24),
 
             // ===== NATIVE SHEETS SECTION =====
-            _buildMainSectionHeader('Native Sheet Examples', icon: CupertinoIcons.rectangle_on_rectangle),
+            _buildMainSectionHeader(
+              'Native Sheet Examples',
+              icon: CupertinoIcons.rectangle_on_rectangle,
+            ),
             const SizedBox(height: 12),
 
             // Sheet Example 1: Settings Sheet (Medium Detent)
@@ -68,7 +71,8 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
             _buildSectionHeader('Nonmodal Sheet - Background Interaction'),
             _buildExampleCard(
               title: 'Text Formatter (Native)',
-              description: 'True nonmodal - tap styles without closing! Background stays interactive.',
+              description:
+                  'True nonmodal - tap styles without closing! Background stays interactive.',
               onTap: () => _showNonmodalSheet(),
             ),
             const SizedBox(height: 24),
@@ -101,10 +105,7 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
               const SizedBox(width: 8),
               const Text(
                 'Native Sheet Best Practices',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -116,10 +117,7 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
             '• Grabber provides visual affordance\n'
             '• Nonmodal sheets allow background interaction\n'
             '• Native rendering uses UISheetPresentationController',
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 15, height: 1.4),
           ),
         ],
       ),
@@ -177,7 +175,9 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
                     description,
                     style: TextStyle(
                       fontSize: 15,
-                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                      color: CupertinoColors.secondaryLabel.resolveFrom(
+                        context,
+                      ),
                     ),
                   ),
                 ],
@@ -216,10 +216,7 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
           const SizedBox(height: 8),
           Text(
             _lastAction,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -312,31 +309,49 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
     final result = await CNSheet.showWithCustomHeader(
       context: context,
       title: 'Format',
-      message: 'Tap styles to apply formatting. Background remains interactive!',
+      message:
+          'Tap styles to apply formatting. Background remains interactive!',
       items: [
         CNSheetItem(title: 'Bold', icon: 'bold', dismissOnTap: false),
         CNSheetItem(title: 'Italic', icon: 'italic', dismissOnTap: false),
         CNSheetItem(title: 'Underline', icon: 'underline', dismissOnTap: false),
-        CNSheetItem(title: 'Strikethrough', icon: 'strikethrough', dismissOnTap: false),
-        CNSheetItem(title: 'Highlight', icon: 'paintbrush', dismissOnTap: false),
+        CNSheetItem(
+          title: 'Strikethrough',
+          icon: 'strikethrough',
+          dismissOnTap: false,
+        ),
+        CNSheetItem(
+          title: 'Highlight',
+          icon: 'paintbrush',
+          dismissOnTap: false,
+        ),
       ],
       detents: [CNSheetDetent.custom(360)],
       prefersGrabberVisible: false,
       isModal: false,
       preferredCornerRadius: 36,
       headerHeight: 52,
-      headerBackgroundColor: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.92),
+      headerBackgroundColor: CupertinoColors.systemBackground
+          .resolveFrom(context)
+          .withOpacity(0.92),
       showHeaderDivider: false,
       headerTitleWeight: FontWeight.w600,
       closeButtonIcon: 'xmark',
       closeButtonColor: CupertinoColors.label.resolveFrom(context),
-      itemBackgroundColor: CupertinoColors.secondarySystemBackground.resolveFrom(context),
+      itemBackgroundColor: CupertinoColors.secondarySystemBackground
+          .resolveFrom(context),
       itemTextColor: CupertinoColors.label.resolveFrom(context),
       itemTintColor: CupertinoColors.activeBlue.resolveFrom(context),
     );
 
     if (result != null) {
-      final actions = ['Bold', 'Italic', 'Underline', 'Strikethrough', 'Highlight'];
+      final actions = [
+        'Bold',
+        'Italic',
+        'Underline',
+        'Strikethrough',
+        'Highlight',
+      ];
       setState(() => _lastAction = '${actions[result]} applied');
     } else {
       setState(() => _lastAction = 'Format sheet closed');

@@ -32,10 +32,7 @@ class CNAlertAction {
 
   /// Converts the action to a map for platform channel communication.
   Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'style': style.index,
-    };
+    return {'title': title, 'style': style.index};
   }
 }
 
@@ -66,8 +63,7 @@ class CNAlertAction {
 /// );
 /// ```
 class CNAlert {
-  static const MethodChannel _channel =
-      MethodChannel('cupertino_native_alert');
+  static const MethodChannel _channel = MethodChannel('cupertino_native_alert');
 
   /// Shows a native alert dialog.
   ///
@@ -113,18 +109,12 @@ class CNAlert {
   }
 
   /// Shows a simple informational alert with an OK button.
-  static Future<void> showInfo({
-    required String title,
-    String? message,
-  }) async {
+  static Future<void> showInfo({required String title, String? message}) async {
     await show(
       title: title,
       message: message,
       actions: [
-        CNAlertAction(
-          title: 'OK',
-          style: CNAlertActionStyle.defaultStyle,
-        ),
+        CNAlertAction(title: 'OK', style: CNAlertActionStyle.defaultStyle),
       ],
     );
   }
@@ -140,10 +130,7 @@ class CNAlert {
       title: title,
       message: message,
       actions: [
-        CNAlertAction(
-          title: 'Cancel',
-          style: CNAlertActionStyle.cancel,
-        ),
+        CNAlertAction(title: 'Cancel', style: CNAlertActionStyle.cancel),
         CNAlertAction(
           title: confirmTitle,
           style: CNAlertActionStyle.defaultStyle,
@@ -167,10 +154,7 @@ class CNAlert {
       title: title,
       message: message,
       actions: [
-        CNAlertAction(
-          title: 'Cancel',
-          style: CNAlertActionStyle.cancel,
-        ),
+        CNAlertAction(title: 'Cancel', style: CNAlertActionStyle.cancel),
         CNAlertAction(
           title: destructiveTitle,
           style: CNAlertActionStyle.destructive,

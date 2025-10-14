@@ -33,7 +33,10 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             const SizedBox(height: 24),
 
             // ===== SHEETS SECTION =====
-            _buildMainSectionHeader('Sheet Examples', icon: CupertinoIcons.rectangle_on_rectangle),
+            _buildMainSectionHeader(
+              'Sheet Examples',
+              icon: CupertinoIcons.rectangle_on_rectangle,
+            ),
             const SizedBox(height: 12),
 
             // Sheet Example 1: Settings Sheet (Medium Detent)
@@ -67,7 +70,8 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             _buildSectionHeader('Nonmodal Sheet - Background Interaction'),
             _buildExampleCard(
               title: 'Text Formatter (Native)',
-              description: 'True nonmodal - tap styles without closing! Background stays interactive.',
+              description:
+                  'True nonmodal - tap styles without closing! Background stays interactive.',
               onTap: () => _showNonmodalSheet(),
             ),
             const SizedBox(height: 16),
@@ -76,7 +80,8 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             _buildSectionHeader('Custom Widget Nonmodal (Flutter Overlay)'),
             _buildExampleCard(
               title: 'Rich Format Panel',
-              description: 'Flutter-rendered nonmodal sheet with custom widgets (segmented controls, toggles)',
+              description:
+                  'Flutter-rendered nonmodal sheet with custom widgets (segmented controls, toggles)',
               onTap: () => _showCustomNonmodalSheet(),
             ),
             const SizedBox(height: 16),
@@ -85,7 +90,8 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             _buildSectionHeader('Custom Widget Items (Modal Only)'),
             _buildExampleCard(
               title: 'Rich Custom UI',
-              description: 'Custom Flutter widgets with rich styling (note: always modal)',
+              description:
+                  'Custom Flutter widgets with rich styling (note: always modal)',
               onTap: () => _showCustomWidgetSheet(),
             ),
             const SizedBox(height: 24),
@@ -118,10 +124,7 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
               const SizedBox(width: 8),
               const Text(
                 'Native Sheet Best Practices',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -132,10 +135,7 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             '• Large detent (full height) for complex tasks\n'
             '• Grabber provides visual affordance\n'
             '• Nonmodal sheets allow background interaction',
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 15, height: 1.4),
           ),
         ],
       ),
@@ -193,7 +193,9 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
                     description,
                     style: TextStyle(
                       fontSize: 15,
-                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                      color: CupertinoColors.secondaryLabel.resolveFrom(
+                        context,
+                      ),
                     ),
                   ),
                 ],
@@ -232,10 +234,7 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
           const SizedBox(height: 8),
           Text(
             _lastAction,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -328,31 +327,49 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
     final result = await CNSheet.showWithCustomHeader(
       context: context,
       title: 'Format',
-      message: 'Tap styles to apply formatting. Background remains interactive!',
+      message:
+          'Tap styles to apply formatting. Background remains interactive!',
       items: [
         CNSheetItem(title: 'Bold', icon: 'bold', dismissOnTap: false),
         CNSheetItem(title: 'Italic', icon: 'italic', dismissOnTap: false),
         CNSheetItem(title: 'Underline', icon: 'underline', dismissOnTap: false),
-        CNSheetItem(title: 'Strikethrough', icon: 'strikethrough', dismissOnTap: false),
-        CNSheetItem(title: 'Highlight', icon: 'paintbrush', dismissOnTap: false),
+        CNSheetItem(
+          title: 'Strikethrough',
+          icon: 'strikethrough',
+          dismissOnTap: false,
+        ),
+        CNSheetItem(
+          title: 'Highlight',
+          icon: 'paintbrush',
+          dismissOnTap: false,
+        ),
       ],
       detents: [CNSheetDetent.custom(360)],
       prefersGrabberVisible: false,
       isModal: false,
       preferredCornerRadius: 36,
       headerHeight: 52,
-      headerBackgroundColor: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.92),
+      headerBackgroundColor: CupertinoColors.systemBackground
+          .resolveFrom(context)
+          .withOpacity(0.92),
       showHeaderDivider: false,
       headerTitleWeight: FontWeight.w600,
       closeButtonIcon: 'xmark',
       closeButtonColor: CupertinoColors.label.resolveFrom(context),
-      itemBackgroundColor: CupertinoColors.secondarySystemBackground.resolveFrom(context),
+      itemBackgroundColor: CupertinoColors.secondarySystemBackground
+          .resolveFrom(context),
       itemTextColor: CupertinoColors.label.resolveFrom(context),
       itemTintColor: CupertinoColors.activeBlue.resolveFrom(context),
     );
 
     if (result != null) {
-      final actions = ['Bold', 'Italic', 'Underline', 'Strikethrough', 'Highlight'];
+      final actions = [
+        'Bold',
+        'Italic',
+        'Underline',
+        'Strikethrough',
+        'Highlight',
+      ];
       setState(() => _lastAction = '${actions[result]} applied');
     } else {
       setState(() => _lastAction = 'Format sheet closed');
@@ -379,20 +396,26 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
       isModal: false,
       preferredCornerRadius: 36,
       headerHeight: 52,
-      headerBackgroundColor: CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.92),
+      headerBackgroundColor: CupertinoColors.systemBackground
+          .resolveFrom(context)
+          .withOpacity(0.92),
       showHeaderDivider: false,
       headerTitleWeight: FontWeight.w600,
       closeButtonIcon: 'xmark',
       closeButtonColor: CupertinoColors.label.resolveFrom(context),
     );
 
-    setState(() => _lastAction = result == null ? 'Custom format sheet closed' : 'Format action $result');
+    setState(
+      () => _lastAction = result == null
+          ? 'Custom format sheet closed'
+          : 'Format action $result',
+    );
   }
 
   /// Example 6: Custom widget sheet with CNSheetItem.widget()
-  /// 
+  ///
   /// IMPORTANT: Custom widgets use Flutter rendering which is always MODAL.
-  /// For true nonmodal behavior with background interaction, use simple 
+  /// For true nonmodal behavior with background interaction, use simple
   /// CNSheetItem(title:, icon:) like in _showNonmodalSheet().
   Future<void> _showCustomWidgetSheet() async {
     final selectedIndex = await CNSheet.show(
@@ -407,13 +430,20 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [CupertinoColors.systemBlue, CupertinoColors.systemIndigo],
+                colors: [
+                  CupertinoColors.systemBlue,
+                  CupertinoColors.systemIndigo,
+                ],
               ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Row(
               children: [
-                Icon(CupertinoIcons.bold, color: CupertinoColors.white, size: 28),
+                Icon(
+                  CupertinoIcons.bold,
+                  color: CupertinoColors.white,
+                  size: 28,
+                ),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -447,13 +477,20 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [CupertinoColors.systemPurple, CupertinoColors.systemPink],
+                colors: [
+                  CupertinoColors.systemPurple,
+                  CupertinoColors.systemPink,
+                ],
               ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Row(
               children: [
-                Icon(CupertinoIcons.italic, color: CupertinoColors.white, size: 28),
+                Icon(
+                  CupertinoIcons.italic,
+                  color: CupertinoColors.white,
+                  size: 28,
+                ),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -489,7 +526,7 @@ class _SheetDemoPageState extends State<SheetDemoPage> {
       prefersGrabberVisible: true,
       isModal: true, // Custom widgets force modal behavior
     );
-    
+
     if (selectedIndex != null) {
       final options = ['Bold', 'Italic', 'Underline', 'Strikethrough'];
       setState(() => _lastAction = '${options[selectedIndex]} applied');
@@ -520,10 +557,9 @@ class _NotesFormatPanelState extends State<_NotesFormatPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final segmentedStyle = CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        );
+    final segmentedStyle = CupertinoTheme.of(
+      context,
+    ).textTheme.textStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w600);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -685,8 +721,12 @@ class _FormatToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeBackground = CupertinoColors.activeBlue.resolveFrom(context).withOpacity(0.15);
-    final inactiveBackground = CupertinoColors.secondarySystemBackground.resolveFrom(context).withOpacity(0.7);
+    final activeBackground = CupertinoColors.activeBlue
+        .resolveFrom(context)
+        .withOpacity(0.15);
+    final inactiveBackground = CupertinoColors.secondarySystemBackground
+        .resolveFrom(context)
+        .withOpacity(0.7);
     final activeColor = CupertinoColors.activeBlue.resolveFrom(context);
     final inactiveColor = CupertinoColors.label.resolveFrom(context);
 
@@ -701,7 +741,9 @@ class _FormatToggleButton extends StatelessWidget {
           border: Border.all(
             color: config.isActive
                 ? activeColor.withOpacity(0.4)
-                : CupertinoColors.separator.resolveFrom(context).withOpacity(0.2),
+                : CupertinoColors.separator
+                      .resolveFrom(context)
+                      .withOpacity(0.2),
             width: 1,
           ),
         ),

@@ -38,8 +38,15 @@ public class CupertinoNativePlugin: NSObject, FlutterPlugin {
     let navigationBarFactory = CupertinoNavigationBarViewFactory(messenger: registrar.messenger())
     registrar.register(navigationBarFactory, withId: "CupertinoNativeNavigationBar")
 
+    let navigationBarScrollableFactory = CupertinoNavigationBarScrollableViewFactory(messenger: registrar.messenger())
+    registrar.register(navigationBarScrollableFactory, withId: "CupertinoNativeNavigationBarScrollable")
+
     let searchBarFactory = CupertinoSearchBarPlatformViewFactory(messenger: registrar.messenger())
     registrar.register(searchBarFactory, withId: "CupertinoNativeSearchBar")
+    
+    // Register native sheet header view for UiKitView integration
+    let sheetHeaderFactory = CupertinoNativeSheetHeaderViewFactory(messenger: registrar.messenger())
+    registrar.register(sheetHeaderFactory, withId: "CupertinoNativeSheetHeader")
     
     // Initialize action sheet handler
     // Get root view controller from the app delegate

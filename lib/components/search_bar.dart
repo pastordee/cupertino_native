@@ -4,10 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 /// A native iOS UISearchBar widget.
-/// 
+///
 /// This widget displays a native iOS UISearchBar using platform channels,
 /// providing authentic iOS search experience following Apple HIG guidelines.
-/// 
+///
 /// **Features:**
 /// - Native UISearchBar rendering
 /// - Descriptive placeholder text support
@@ -17,7 +17,7 @@ import 'package:flutter/services.dart';
 /// - Keyboard types and appearance
 /// - Return key types
 /// - Voice search button (iOS 14+)
-/// 
+///
 /// **Example:**
 /// ```dart
 /// CNSearchBar(
@@ -159,9 +159,12 @@ class _CNSearchBarState extends State<CNSearchBar> {
       'searchBarStyle': widget.searchBarStyle.index,
       if (widget.barTintColor != null)
         'barTintColor': _colorToARGB(widget.barTintColor!),
-      if (widget.tintColor != null) 'tintColor': _colorToARGB(widget.tintColor!),
+      if (widget.tintColor != null)
+        'tintColor': _colorToARGB(widget.tintColor!),
       if (widget.searchFieldBackgroundColor != null)
-        'searchFieldBackgroundColor': _colorToARGB(widget.searchFieldBackgroundColor!),
+        'searchFieldBackgroundColor': _colorToARGB(
+          widget.searchFieldBackgroundColor!,
+        ),
       'showsScopeBar': widget.showsScopeBar,
       'scopeButtonTitles': widget.scopeButtonTitles,
       'selectedScopeIndex': widget.selectedScopeIndex,

@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 
 /// A bottom toolbar that transforms between search mode and tab bar mode.
-/// 
+///
 /// **Unfocused state**: Shows icon + search field + trailing action
 /// **Focused state**: Shows full tab bar + search button on trailing edge
-/// 
+///
 /// This matches the Apple HIG pattern shown in iOS design guidelines.
-/// 
+///
 /// **Best Practices (Apple HIG):**
 /// - Use descriptive placeholder text (e.g., "Shows, Movies, and More" instead of just "Search")
 /// - Search immediately as user types for responsive experience
@@ -14,7 +14,7 @@ import 'package:flutter/cupertino.dart';
 /// - Provide relevant results first, consider categorizing them
 /// - Consider scope controls for filtering search categories
 /// - Consider tokens for filtering by common terms
-/// 
+///
 /// Example:
 /// ```dart
 /// CNTransformingToolbar(
@@ -144,8 +144,8 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = widget.backgroundColor ??
-        CupertinoTheme.of(context).barBackgroundColor;
+    final bgColor =
+        widget.backgroundColor ?? CupertinoTheme.of(context).barBackgroundColor;
 
     return Container(
       height: widget.height,
@@ -194,7 +194,9 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
               child: Container(
                 height: 36,
                 decoration: BoxDecoration(
-                  color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                  color: CupertinoColors.tertiarySystemFill.resolveFrom(
+                    context,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -203,14 +205,18 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
                     Icon(
                       CupertinoIcons.search,
                       size: 18,
-                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                      color: CupertinoColors.secondaryLabel.resolveFrom(
+                        context,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       widget.searchPlaceholder,
                       style: TextStyle(
                         fontSize: 17,
-                        color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                        color: CupertinoColors.secondaryLabel.resolveFrom(
+                          context,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -249,7 +255,9 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
                         child: Container(
                           decoration: BoxDecoration(
                             color: i == widget.selectedIndex
-                                ? CupertinoColors.systemBackground.resolveFrom(context)
+                                ? CupertinoColors.systemBackground.resolveFrom(
+                                    context,
+                                  )
                                 : const Color(0x00000000), // transparent
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -262,7 +270,9 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
                                 size: 16,
                                 color: i == widget.selectedIndex
                                     ? CupertinoColors.activeBlue
-                                    : CupertinoColors.label.resolveFrom(context),
+                                    : CupertinoColors.label.resolveFrom(
+                                        context,
+                                      ),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -274,7 +284,9 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
                                       : FontWeight.normal,
                                   color: i == widget.selectedIndex
                                       ? CupertinoColors.activeBlue
-                                      : CupertinoColors.label.resolveFrom(context),
+                                      : CupertinoColors.label.resolveFrom(
+                                          context,
+                                        ),
                                 ),
                               ),
                             ],
@@ -315,14 +327,11 @@ class _CNTransformingToolbarState extends State<CNTransformingToolbar>
 /// Represents a tab in the transforming toolbar
 class ToolbarTab {
   /// Creates a toolbar tab with a label and icon
-  const ToolbarTab({
-    required this.label,
-    required this.icon,
-  });
+  const ToolbarTab({required this.label, required this.icon});
 
   /// The text label displayed below the icon
   final String label;
-  
+
   /// The icon displayed for this tab
   final IconData icon;
 }

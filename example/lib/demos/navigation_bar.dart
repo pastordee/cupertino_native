@@ -31,14 +31,19 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
               ),
             ),
           ),
-          
+
           // Scrollable content
           SafeArea(
             child: ListView(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 60, bottom: 16),
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 60,
+                bottom: 16,
+              ),
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Demo card
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -66,9 +71,9 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Controls
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -106,9 +111,9 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Features list
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -129,20 +134,31 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildFeature('🌊', 'Liquid Glass Effect',
-                          'Translucent blur that adapts to content'),
-                      _buildFeature('🎨', 'Native Appearance',
-                          'True iOS/macOS navigation bar'),
-                      _buildFeature('🔘', 'Custom Actions',
-                          'Back button and trailing actions'),
-                      _buildFeature('🎯', 'SF Symbols',
-                          'Native icon support'),
-                      _buildFeature('🌓', 'Dark Mode',
-                          'Automatic theme adaptation'),
+                      _buildFeature(
+                        '🌊',
+                        'Liquid Glass Effect',
+                        'Translucent blur that adapts to content',
+                      ),
+                      _buildFeature(
+                        '🎨',
+                        'Native Appearance',
+                        'True iOS/macOS navigation bar',
+                      ),
+                      _buildFeature(
+                        '🔘',
+                        'Custom Actions',
+                        'Back button and trailing actions',
+                      ),
+                      _buildFeature('🎯', 'SF Symbols', 'Native icon support'),
+                      _buildFeature(
+                        '🌓',
+                        'Dark Mode',
+                        'Automatic theme adaptation',
+                      ),
                     ],
                   ),
                 ),
-                
+
                 // Add more content to enable scrolling
                 const SizedBox(height: 400),
                 Container(
@@ -163,7 +179,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
               ],
             ),
           ),
-          
+
           // Native translucent navigation bar positioned on top
           Positioned(
             left: 0,
@@ -179,6 +195,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                       Navigator.of(context).pop();
                     },
                   ),
+                  CNNavigationBarAction.fixedSpace(5),
                   CNNavigationBarAction(
                     label: 'Back',
                     padding: 2,
@@ -195,6 +212,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                       print('Settings tapped');
                     },
                   ),
+                  CNNavigationBarAction.flexibleSpace(),
                   CNNavigationBarAction(
                     icon: CNSymbol('plus'),
                     onPressed: () {

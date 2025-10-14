@@ -8,11 +8,17 @@ import 'demos/icon.dart';
 import 'demos/popup_menu_button.dart';
 import 'demos/button.dart';
 import 'demos/navigation_bar.dart';
+import 'demos/navigation_bar_scrollable.dart';
 import 'demos/toolbar.dart';
 import 'demos/native_search_bar.dart';
 import 'demos/action_sheet.dart';
 import 'demos/native_sheet_demo.dart';
 import 'demos/custom_sheet_demo.dart';
+import 'demos/sheet_custom_content.dart';
+import 'demos/sheet_uikit_view.dart';
+import 'demos/sheet_custom_styling.dart';
+import 'demos/simple_search_demo.dart';
+import 'demos/tabbar_only_demo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -212,14 +218,15 @@ class HomePage extends StatelessWidget {
               CupertinoListTile(
                 title: Text('Toolbar'),
                 leading: CNIcon(
-                  symbol: CNSymbol('wrench.and.screwdriver', color: accentColor),
+                  symbol: CNSymbol(
+                    'wrench.and.screwdriver',
+                    color: accentColor,
+                  ),
                 ),
                 trailing: CupertinoListTileChevron(),
                 onTap: () {
                   Navigator.of(context).push(
-                    CupertinoPageRoute(
-                      builder: (_) => const ToolbarDemoPage(),
-                    ),
+                    CupertinoPageRoute(builder: (_) => const ToolbarDemoPage()),
                   );
                 },
               ),
@@ -233,6 +240,20 @@ class HomePage extends StatelessWidget {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
                       builder: (_) => const NavigationBarDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('NavigationBar Scrollable'),
+                leading: CNIcon(
+                  symbol: CNSymbol('square.grid.2x2', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => NavigationBarScrollableDemoPage(),
                     ),
                   );
                 },
@@ -252,12 +273,47 @@ class HomePage extends StatelessWidget {
               CupertinoListTile(
                 title: Text('Native Search Bar'),
                 leading: CNIcon(
-                  symbol: CNSymbol('magnifyingglass.circle', color: accentColor),
+                  symbol: CNSymbol(
+                    'magnifyingglass.circle',
+                    color: accentColor,
+                  ),
                 ),
                 trailing: CupertinoListTileChevron(),
                 onTap: () {
                   Navigator.of(context).push(
-                    CupertinoPageRoute(builder: (_) => const NativeSearchBarDemoPage()),
+                    CupertinoPageRoute(
+                      builder: (_) => const NativeSearchBarDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Search Integration'),
+                subtitle: Text('CNToolbar / CNNavigationBar / CNTabBar'),
+                leading: CNIcon(
+                  symbol: CNSymbol('magnifyingglass', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const SimpleSearchDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Tab Bar Only (Debug)'),
+                subtitle: Text('Isolated CNTabBar.search() test'),
+                leading: CNIcon(
+                  symbol: CNSymbol('square.grid.2x2', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const TabBarOnlyDemoPage(),
+                    ),
                   );
                 },
               ),
@@ -269,7 +325,9 @@ class HomePage extends StatelessWidget {
                 trailing: CupertinoListTileChevron(),
                 onTap: () {
                   Navigator.of(context).push(
-                    CupertinoPageRoute(builder: (_) => const ActionSheetDemoPage()),
+                    CupertinoPageRoute(
+                      builder: (_) => const ActionSheetDemoPage(),
+                    ),
                   );
                 },
               ),
@@ -277,12 +335,17 @@ class HomePage extends StatelessWidget {
                 title: Text('Native Sheets'),
                 subtitle: Text('UIKit rendering'),
                 leading: CNIcon(
-                  symbol: CNSymbol('rectangle.on.rectangle', color: accentColor),
+                  symbol: CNSymbol(
+                    'rectangle.on.rectangle',
+                    color: accentColor,
+                  ),
                 ),
                 trailing: CupertinoListTileChevron(),
                 onTap: () {
                   Navigator.of(context).push(
-                    CupertinoPageRoute(builder: (_) => const NativeSheetDemoPage()),
+                    CupertinoPageRoute(
+                      builder: (_) => const NativeSheetDemoPage(),
+                    ),
                   );
                 },
               ),
@@ -290,12 +353,72 @@ class HomePage extends StatelessWidget {
                 title: Text('Custom Widget Sheets'),
                 subtitle: Text('Flutter overlay rendering'),
                 leading: CNIcon(
-                  symbol: CNSymbol('square.stack.3d.down.right', color: accentColor),
+                  symbol: CNSymbol(
+                    'square.stack.3d.down.right',
+                    color: accentColor,
+                  ),
                 ),
                 trailing: CupertinoListTileChevron(),
                 onTap: () {
                   Navigator.of(context).push(
-                    CupertinoPageRoute(builder: (_) => const CustomSheetDemoPage()),
+                    CupertinoPageRoute(
+                      builder: (_) => const CustomSheetDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Custom Content Sheet'),
+                subtitle: Text('Non-modal sheet with Flutter widgets'),
+                leading: CNIcon(
+                  symbol: CNSymbol(
+                    'pencil.and.list.clipboard',
+                    color: accentColor,
+                  ),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const SheetCustomContentDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text(
+                  '🎉 Ultimate Goal - Native chrome + Flutter content',
+                ),
+                leading: CNIcon(
+                  symbol: CNSymbol(
+                    'star.circle.fill',
+                    color: CupertinoColors.systemGreen,
+                  ),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const SheetUiKitViewDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Sheet Custom Styling'),
+                subtitle: Text('Advanced customization options'),
+                leading: CNIcon(
+                  symbol: CNSymbol(
+                    'paintbrush.fill',
+                    color: CupertinoColors.systemPurple,
+                  ),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const SheetCustomStylingDemoPage(),
+                    ),
                   );
                 },
               ),

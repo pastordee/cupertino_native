@@ -69,7 +69,9 @@ class CNActionSheetAction {
 /// );
 /// ```
 class CNActionSheet {
-  static const MethodChannel _channel = MethodChannel('cupertino_native_action_sheet');
+  static const MethodChannel _channel = MethodChannel(
+    'cupertino_native_action_sheet',
+  );
 
   /// Shows a native iOS action sheet
   ///
@@ -93,10 +95,7 @@ class CNActionSheet {
 
     // Build the action list for native side
     final List<Map<String, dynamic>> actionMaps = actions.map((action) {
-      return {
-        'title': action.title,
-        'style': action.style.index,
-      };
+      return {'title': action.title, 'style': action.style.index};
     }).toList();
 
     // Add cancel action if provided

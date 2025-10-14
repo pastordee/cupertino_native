@@ -7,6 +7,9 @@ import 'package:flutter/services.dart';
 
 import '../channel/params.dart';
 import '../style/sf_symbol.dart';
+import 'search_config.dart';
+import 'search_bar.dart';
+import 'toolbar.dart';
 
 /// Immutable data describing a single tab bar item.
 class CNTabBarItem {
@@ -18,8 +21,10 @@ class CNTabBarItem {
     this.imageSize,
     this.badgeValue,
     this.badgeColor,
-  }) : assert(icon == null || image == null,
-            'Cannot provide both icon and image');
+  }) : assert(
+         icon == null || image == null,
+         'Cannot provide both icon and image',
+       );
 
   /// Optional tab item label.
   final String? label;
@@ -36,12 +41,12 @@ class CNTabBarItem {
   final double? imageSize;
 
   /// Badge value to display on the tab.
-  /// 
+  ///
   /// Supports automatic formatting:
   /// - Numbers are formatted (e.g., 150 becomes "99+" if over 99)
   /// - Use "!" for critical alerts
   /// - Use empty string or null to hide the badge
-  /// 
+  ///
   /// Pass either a String or an int:
   /// ```dart
   /// badgeValue: '5'      // Shows "5"
@@ -52,7 +57,7 @@ class CNTabBarItem {
 
   /// Optional custom badge background color.
   /// If null, uses the system default red color for badges.
-  /// 
+  ///
   /// Examples:
   /// ```dart
   /// badgeColor: CupertinoColors.systemRed      // Default critical (red)
@@ -100,9 +105,59 @@ class CNTabBar extends StatefulWidget {
     this.searchPlaceholder,
     this.onSearchChanged,
     this.onSearchSubmitted,
-  });
+  }) : searchConfig = null,
+       searchIndex = null,
+       _isSearchEnabled = false;
+
+  /// Creates a tab bar with integrated search functionality.
+  ///
+  /// When the search tab is tapped, it expands to show a search bar with
+  /// the previously active tab icon for context. Search tab is automatically
+  /// added to the items list.
+  ///
+  /// Example:
+  /// ```dart
+  /// CNTabBar.search(
+  ///   items: [
+  ///     CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
+  ///     CNTabBarItem(label: 'Library', icon: CNSymbol('music.note.list')),
+  ///   ],
+  ///   currentIndex: _currentIndex,
+  ///   onTap: (index) => setState(() => _currentIndex = index),
+  ///   searchConfig: CNSearchConfig(
+  ///     placeholder: 'Search',
+  ///     onSearchTextChanged: (text) => print(text),
+  ///     resultsBuilder: (context, text) => SearchResults(text),
+  ///   ),
+  ///   split: true,
+  ///   rightCount: 1, // Search will be on the right
+  /// )
+  /// ```
+  const CNTabBar.search({
+    super.key,
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+    required this.searchConfig,
+    this.searchIndex,
+    this.tint,
+    this.backgroundColor,
+    this.iconSize,
+    this.height,
+    this.split = false,
+    this.rightCount = 0,
+    this.shrinkCentered = false,
+    this.splitSpacing = 8.0,
+  }) : leadingAccessory = null,
+       trailingAccessory = null,
+       showSearchField = false,
+       searchPlaceholder = null,
+       onSearchChanged = null,
+       onSearchSubmitted = null,
+       _isSearchEnabled = true;
 
   /// Items to display in the tab bar.
+  /// For search-enabled tab bar, search tab is added automatically.
   final List<CNTabBarItem> items;
 
   /// The index of the currently selected item.
@@ -128,7 +183,7 @@ class CNTabBar extends StatefulWidget {
 
   /// How many trailing items to pin right when [split] is true.
   final int rightCount; // how many trailing items to pin right when split
-  
+
   /// When true, centers the split groups more tightly.
   final bool shrinkCentered;
 
@@ -137,7 +192,7 @@ class CNTabBar extends StatefulWidget {
 
   /// Optional leading accessory (button or control) to display before tabs.
   /// Typically used for menu buttons, filters, or navigation controls.
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// leadingAccessory: CNButton(
@@ -150,7 +205,7 @@ class CNTabBar extends StatefulWidget {
 
   /// Optional trailing accessory (button or control) to display after tabs.
   /// Typically used for compose, add, or action buttons.
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// trailingAccessory: CNButton(
@@ -175,8 +230,22 @@ class CNTabBar extends StatefulWidget {
   /// Called when the user submits the search (e.g., taps return key).
   final ValueChanged<String>? onSearchSubmitted;
 
+  /// Search configuration (only for search-enabled tab bar).
+  final CNSearchConfig? searchConfig;
+
+  /// Index where search tab should be placed. If null, adds to the end.
+  final int? searchIndex;
+
+  /// Internal flag to indicate search functionality is enabled.
+  final bool _isSearchEnabled;
+
   @override
-  State<CNTabBar> createState() => _CNTabBarState();
+  State<CNTabBar> createState() {
+    if (_isSearchEnabled) {
+      return _CNTabBarSearchState();
+    }
+    return _CNTabBarState();
+  }
 }
 
 class _CNTabBarState extends State<CNTabBar> {
@@ -243,7 +312,9 @@ class _CNTabBarState extends State<CNTabBar> {
     final colors = widget.items
         .map((e) => resolveColorToArgb(e.icon?.color, context))
         .toList();
-    final badges = widget.items.map((e) => e.formattedBadgeValue ?? '').toList();
+    final badges = widget.items
+        .map((e) => e.formattedBadgeValue ?? '')
+        .toList();
     final badgeColors = widget.items
         .map((e) => resolveColorToArgb(e.badgeColor, context))
         .toList();
@@ -256,7 +327,7 @@ class _CNTabBarState extends State<CNTabBar> {
       }
       return '';
     }).toList();
-    
+
     final imageSizes = widget.items.map((e) => e.imageSize).toList();
 
     final creationParams = <String, dynamic>{
@@ -299,7 +370,7 @@ class _CNTabBarState extends State<CNTabBar> {
           );
 
     final h = widget.height ?? _intrinsicHeight ?? 50.0;
-    
+
     Widget tabBarWidget;
     if (!widget.split && widget.shrinkCentered) {
       final w = _intrinsicWidth;
@@ -326,9 +397,7 @@ class _CNTabBarState extends State<CNTabBar> {
 
     // Add search field row if enabled
     if (widget.showSearchField) {
-      children.add(
-        _buildSearchRow(height),
-      );
+      children.add(_buildSearchRow(height));
     }
 
     // Build main tab bar row with accessories
@@ -370,10 +439,7 @@ class _CNTabBarState extends State<CNTabBar> {
       ),
     );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: children,
-    );
+    return Column(mainAxisSize: MainAxisSize.min, children: children);
   }
 
   Widget _buildSearchRow(double tabBarHeight) {
@@ -381,7 +447,9 @@ class _CNTabBarState extends State<CNTabBar> {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: widget.backgroundColor ?? CupertinoColors.systemBackground.resolveFrom(context),
+        color:
+            widget.backgroundColor ??
+            CupertinoColors.systemBackground.resolveFrom(context),
         border: Border(
           bottom: BorderSide(
             color: CupertinoColors.separator.resolveFrom(context),
@@ -392,10 +460,7 @@ class _CNTabBarState extends State<CNTabBar> {
       child: Row(
         children: [
           if (widget.leadingAccessory != null) ...[
-            SizedBox(
-              height: 40,
-              child: widget.leadingAccessory!,
-            ),
+            SizedBox(height: 40, child: widget.leadingAccessory!),
             const SizedBox(width: 8),
           ],
           Expanded(
@@ -403,15 +468,14 @@ class _CNTabBarState extends State<CNTabBar> {
               placeholder: widget.searchPlaceholder ?? 'Search',
               onChanged: widget.onSearchChanged,
               onSubmitted: widget.onSearchSubmitted,
-              backgroundColor: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+              backgroundColor: CupertinoColors.tertiarySystemFill.resolveFrom(
+                context,
+              ),
             ),
           ),
           if (widget.trailingAccessory != null) ...[
             const SizedBox(width: 8),
-            SizedBox(
-              height: 40,
-              child: widget.trailingAccessory!,
-            ),
+            SizedBox(height: 40, child: widget.trailingAccessory!),
           ],
         ],
       ),
@@ -438,7 +502,9 @@ class _CNTabBarState extends State<CNTabBar> {
     if (call.method == 'valueChanged') {
       final args = call.arguments as Map?;
       final idx = (args?['index'] as num?)?.toInt();
-      if (idx != null && idx != _lastIndex) {
+      if (idx != null) {
+        // Always call onTap, even if the index hasn't changed
+        // This allows users to respond to taps on the currently selected tab
         widget.onTap(idx);
         _lastIndex = idx;
       }
@@ -474,9 +540,12 @@ class _CNTabBarState extends State<CNTabBar> {
     // Items update (for hot reload or dynamic changes)
     final labels = widget.items.map((e) => e.label ?? '').toList();
     final symbols = widget.items.map((e) => e.icon?.name ?? '').toList();
-    final imageKeys =
-        widget.items.map((e) => e.image?.hashCode.toString() ?? '').toList();
-    final badges = widget.items.map((e) => e.formattedBadgeValue ?? '').toList();
+    final imageKeys = widget.items
+        .map((e) => e.image?.hashCode.toString() ?? '')
+        .toList();
+    final badges = widget.items
+        .map((e) => e.formattedBadgeValue ?? '')
+        .toList();
     final badgeColors = widget.items
         .map((e) => resolveColorToArgb(e.badgeColor, context))
         .toList();
@@ -539,8 +608,9 @@ class _CNTabBarState extends State<CNTabBar> {
   void _cacheItems() {
     _lastLabels = widget.items.map((e) => e.label ?? '').toList();
     _lastSymbols = widget.items.map((e) => e.icon?.name ?? '').toList();
-    _lastImageKeys =
-        widget.items.map((e) => e.image?.hashCode.toString() ?? '').toList();
+    _lastImageKeys = widget.items
+        .map((e) => e.image?.hashCode.toString() ?? '')
+        .toList();
     _lastBadges = widget.items.map((e) => e.formattedBadgeValue ?? '').toList();
   }
 
@@ -572,24 +642,28 @@ class _CNTabBarState extends State<CNTabBar> {
     final completer = Completer<Uint8List?>();
 
     late final ImageStreamListener listener;
-    listener = ImageStreamListener((ImageInfo info, bool _) async {
-      try {
-        final byteData =
-            await info.image.toByteData(format: ui.ImageByteFormat.png);
-        if (byteData != null) {
-          completer.complete(byteData.buffer.asUint8List());
-        } else {
+    listener = ImageStreamListener(
+      (ImageInfo info, bool _) async {
+        try {
+          final byteData = await info.image.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          if (byteData != null) {
+            completer.complete(byteData.buffer.asUint8List());
+          } else {
+            completer.complete(null);
+          }
+        } catch (e) {
           completer.complete(null);
+        } finally {
+          imageStream.removeListener(listener);
         }
-      } catch (e) {
+      },
+      onError: (dynamic exception, StackTrace? stackTrace) {
         completer.complete(null);
-      } finally {
         imageStream.removeListener(listener);
-      }
-    }, onError: (dynamic exception, StackTrace? stackTrace) {
-      completer.complete(null);
-      imageStream.removeListener(listener);
-    });
+      },
+    );
 
     imageStream.addListener(listener);
     return completer.future;
@@ -609,5 +683,201 @@ class _CNTabBarState extends State<CNTabBar> {
         if (w != null && w > 0) _intrinsicWidth = w;
       });
     } catch (_) {}
+  }
+}
+
+/// State class for search-enabled tab bar.
+class _CNTabBarSearchState extends State<CNTabBar>
+    with SingleTickerProviderStateMixin {
+  bool _isSearchExpanded = false;
+  String _searchText = '';
+  int _lastTabIndex = 0;
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastTabIndex = widget.currentIndex;
+    _animationController = AnimationController(
+      vsync: this,
+      duration: widget.searchConfig!.animationDuration,
+    );
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          ),
+        );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(CNTabBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Track the last non-search tab
+    if (widget.currentIndex != _getSearchTabIndex() && !_isSearchExpanded) {
+      setState(() {
+        _lastTabIndex = widget.currentIndex;
+      });
+    }
+  }
+
+  int _getSearchTabIndex() {
+    return widget.searchIndex ?? widget.items.length;
+  }
+
+  CNSymbol _getLastTabIcon() {
+    if (_lastTabIndex >= 0 && _lastTabIndex < widget.items.length) {
+      return widget.items[_lastTabIndex].icon ?? const CNSymbol('house.fill');
+    }
+    return widget.items[0].icon ?? const CNSymbol('house.fill');
+  }
+
+  void _expandSearch() {
+    setState(() {
+      _lastTabIndex = widget.currentIndex;
+      _isSearchExpanded = true;
+    });
+    _animationController.forward();
+  }
+
+  void _collapseSearch() {
+    _animationController.reverse().then((_) {
+      if (mounted) {
+        setState(() {
+          _isSearchExpanded = false;
+          _searchText = '';
+        });
+      }
+    });
+    widget.onTap(_lastTabIndex);
+    widget.searchConfig!.onSearchCancelled?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isSearchExpanded) {
+      return _buildSearchView();
+    } else {
+      return _buildNormalView();
+    }
+  }
+
+  Widget _buildNormalView() {
+    // Add search tab to items
+    final searchTab = CNTabBarItem(
+      label: 'Search',
+      icon: widget.searchConfig!.searchIcon,
+    );
+
+    final searchTabIndex = _getSearchTabIndex();
+    final itemsWithSearch = <CNTabBarItem>[
+      ...widget.items.take(searchTabIndex),
+      searchTab,
+      ...widget.items.skip(searchTabIndex),
+    ];
+
+    // Adjust currentIndex to account for the inserted search tab
+    final adjustedCurrentIndex = widget.currentIndex >= searchTabIndex
+        ? widget.currentIndex + 1
+        : widget.currentIndex;
+
+    return CNTabBar(
+      items: itemsWithSearch,
+      currentIndex: adjustedCurrentIndex,
+      split: widget.split,
+      rightCount: widget.rightCount,
+      shrinkCentered: widget.shrinkCentered,
+      backgroundColor: widget.backgroundColor,
+      height: widget.height,
+      tint: widget.tint,
+      iconSize: widget.iconSize,
+      splitSpacing: widget.splitSpacing,
+      onTap: (index) {
+        if (index == searchTabIndex) {
+          _expandSearch();
+        } else {
+          // Adjust index if after search tab
+          final adjustedIndex = index > searchTabIndex ? index - 1 : index;
+          widget.onTap(adjustedIndex);
+        }
+      },
+    );
+  }
+
+  Widget _buildSearchView() {
+    final config = widget.searchConfig!;
+
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Stack(
+        children: [
+          // Search results overlay
+          if (config.showResultsOverlay &&
+              config.resultsBuilder != null &&
+              _searchText.isNotEmpty)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: config.searchBarHeight,
+              top: 0,
+              child: config.resultsBuilder!(context, _searchText),
+            ),
+          // Search bar with context icon
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              top: false,
+              child: Container(
+                height: config.searchBarHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+                child: Row(
+                  children: [
+                    // Last tab icon
+                    SizedBox(
+                      width: 80,
+                      child: CNToolbar(
+                        trailing: [
+                          CNToolbarAction(
+                            icon: _getLastTabIcon(),
+                            onPressed: _collapseSearch,
+                          ),
+                        ],
+                        height: 44,
+                        transparent: true,
+                      ),
+                    ),
+                    const SizedBox(width: 1),
+                    // Search bar
+                    Expanded(
+                      child: CNSearchBar(
+                        placeholder: config.placeholder,
+                        showsCancelButton: config.showsCancelButton,
+                        onTextChanged: (text) {
+                          setState(() => _searchText = text);
+                          config.onSearchTextChanged?.call(text);
+                        },
+                        onSearchButtonClicked: (text) {
+                          config.onSearchSubmitted?.call(text);
+                        },
+                        onCancelButtonClicked: _collapseSearch,
+                        height: config.searchBarHeight,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -11,14 +11,14 @@ class CNCustomSheetItem {
   final String? icon;
   final Widget? widget;
   final bool dismissOnTap;
-  
+
   /// Creates a simple sheet item with title and optional icon.
   const CNCustomSheetItem({
     required this.title,
     this.icon,
     this.dismissOnTap = true,
   }) : widget = null;
-  
+
   /// Creates a sheet item with a custom Flutter widget.
   /// Custom widgets use Flutter overlay rendering for rich custom UI.
   const CNCustomSheetItem.widget({
@@ -26,30 +26,30 @@ class CNCustomSheetItem {
     this.dismissOnTap = true,
   }) : title = null,
        icon = null;
-  
+
   bool get isCustomWidget => widget != null;
 }
 
 /// A custom widget sheet presentation using Flutter overlay rendering.
-/// 
+///
 /// Use this for sheets with custom Flutter widgets and rich UI that isn't
 /// possible with native UIKit rendering. Note that custom widget sheets
 /// can be nonmodal but use Flutter overlay instead of native UISheetPresentationController.
-/// 
+///
 /// ## When to Use
-/// 
+///
 /// - Custom layouts with complex Flutter widgets
 /// - Rich UI with segmented controls, toggles, custom components
 /// - Full control over styling and animation
-/// 
+///
 /// ## Limitations
-/// 
+///
 /// - Uses Flutter overlay rendering (not native UIKit)
 /// - Nonmodal behavior implemented via Flutter, not UISheetPresentationController
 /// - May have slightly different performance characteristics than native sheets
-/// 
+///
 /// ## Usage
-/// 
+///
 /// **Modal Custom Widget Sheet:**
 /// ```dart
 /// await CNCustomSheet.show(
@@ -64,7 +64,7 @@ class CNCustomSheetItem {
 ///   isModal: true,
 /// );
 /// ```
-/// 
+///
 /// **Nonmodal Custom Widget Sheet:**
 /// ```dart
 /// await CNCustomSheet.show(
@@ -79,7 +79,7 @@ class CNCustomSheetItem {
 ///   isModal: false, // Background remains interactive
 /// );
 /// ```
-/// 
+///
 /// **With Custom Header:**
 /// ```dart
 /// await CNCustomSheet.showWithCustomHeader(
@@ -93,7 +93,7 @@ class CNCustomSheetItem {
 /// ```
 class CNCustomSheet {
   /// Shows a custom widget sheet with Flutter rendering.
-  /// 
+  ///
   /// [title] - Optional title for the sheet
   /// [message] - Optional message below the title
   /// [items] - List of items to display (can include custom widgets)
@@ -144,16 +144,16 @@ class CNCustomSheet {
       );
     }
   }
-  
+
   /// Shows a custom widget sheet with custom header (title + close button).
-  /// 
+  ///
   /// [title] - Title displayed in the header
   /// [message] - Optional message below the header
   /// [items] - List of items to display
   /// [detents] - Heights at which the sheet can rest
   /// [prefersGrabberVisible] - Whether to show the grabber handle
   /// [isModal] - Whether the sheet blocks background interaction
-  /// 
+  ///
   /// **Header Styling Options:**
   /// [headerTitleSize] - Font size for the title
   /// [headerTitleWeight] - Font weight for the title
@@ -246,7 +246,7 @@ class CNCustomSheet {
       );
     }
   }
-  
+
   static Future<int?> _showModalSheet({
     required BuildContext context,
     String? title,
@@ -275,7 +275,9 @@ class CNCustomSheet {
       builder: (BuildContext context) => Container(
         decoration: BoxDecoration(
           color: CupertinoColors.systemBackground.resolveFrom(context),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(preferredCornerRadius ?? 10)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(preferredCornerRadius ?? 10),
+          ),
         ),
         child: SafeArea(
           top: false,
@@ -310,7 +312,12 @@ class CNCustomSheet {
                 )
               else if (title != null)
                 Padding(
-                  padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 8),
+                  padding: const EdgeInsets.only(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    bottom: 8,
+                  ),
                   child: Text(
                     title,
                     style: const TextStyle(
@@ -322,7 +329,10 @@ class CNCustomSheet {
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   children: [
                     if (message != null)
                       Padding(
@@ -339,7 +349,7 @@ class CNCustomSheet {
                     ...items.asMap().entries.map((entry) {
                       final index = entry.key;
                       final item = entry.value;
-                      
+
                       if (item.widget != null) {
                         if (item.dismissOnTap) {
                           return GestureDetector(
@@ -353,10 +363,16 @@ class CNCustomSheet {
                           padding: EdgeInsets.zero,
                           onPressed: () => Navigator.of(context).pop(index),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
-                              color: itemBackgroundColor ?? CupertinoColors.secondarySystemBackground.resolveFrom(context),
+                              color:
+                                  itemBackgroundColor ??
+                                  CupertinoColors.secondarySystemBackground
+                                      .resolveFrom(context),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
@@ -374,7 +390,9 @@ class CNCustomSheet {
                                     item.title!,
                                     style: TextStyle(
                                       fontSize: 17,
-                                      color: itemTextColor ?? CupertinoColors.label,
+                                      color:
+                                          itemTextColor ??
+                                          CupertinoColors.label,
                                     ),
                                   ),
                                 ),
@@ -394,8 +412,11 @@ class CNCustomSheet {
       ),
     );
   }
-  
-  static double _resolveDetentHeight(BuildContext context, List<CNSheetDetent> detents) {
+
+  static double _resolveDetentHeight(
+    BuildContext context,
+    List<CNSheetDetent> detents,
+  ) {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
     final safeBottom = mediaQuery.padding.bottom;
@@ -489,17 +510,23 @@ class CNCustomSheet {
     overlayState.insert(entry);
     return completer.future;
   }
-  
+
   // Helper to parse icon names (basic implementation)
   static IconData _parseIconName(String iconName) {
     // Map common SF Symbol names to CupertinoIcons
     switch (iconName) {
-      case 'bold': return CupertinoIcons.bold;
-      case 'italic': return CupertinoIcons.italic;
-      case 'underline': return CupertinoIcons.underline;
-      case 'strikethrough': return CupertinoIcons.strikethrough;
-      case 'paintbrush': return CupertinoIcons.paintbrush;
-      case 'highlighter': return CupertinoIcons.color_filter;
+      case 'bold':
+        return CupertinoIcons.bold;
+      case 'italic':
+        return CupertinoIcons.italic;
+      case 'underline':
+        return CupertinoIcons.underline;
+      case 'strikethrough':
+        return CupertinoIcons.strikethrough;
+      case 'paintbrush':
+        return CupertinoIcons.paintbrush;
+      case 'highlighter':
+        return CupertinoIcons.color_filter;
       case 'xmark':
       case 'close':
       case 'dismiss':
@@ -508,7 +535,8 @@ class CNCustomSheet {
         return CupertinoIcons.chevron_down;
       case 'chevron.up':
         return CupertinoIcons.chevron_up;
-      default: return CupertinoIcons.circle;
+      default:
+        return CupertinoIcons.circle;
     }
   }
 }
@@ -628,10 +656,7 @@ class _NonmodalSheetOverlayState extends State<_NonmodalSheetOverlay>
               animation: _animation,
               builder: (context, child) {
                 final dy = (1 - _animation.value) * (widget.sheetHeight + 80);
-                return Transform.translate(
-                  offset: Offset(0, dy),
-                  child: child,
-                );
+                return Transform.translate(offset: Offset(0, dy), child: child);
               },
               child: Padding(
                 padding: EdgeInsets.only(
@@ -649,10 +674,8 @@ class _NonmodalSheetOverlayState extends State<_NonmodalSheetOverlay>
   }
 
   Widget _buildSheet(BuildContext context) {
-    final themeBackground = _resolveDynamicColor(
-          context,
-          widget.headerBackgroundColor,
-        ) ??
+    final themeBackground =
+        _resolveDynamicColor(context, widget.headerBackgroundColor) ??
         CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.92);
 
     final cornerRadius = widget.cornerRadius ?? 32.0;
@@ -665,7 +688,9 @@ class _NonmodalSheetOverlayState extends State<_NonmodalSheetOverlay>
           decoration: BoxDecoration(
             color: themeBackground,
             border: Border.all(
-              color: CupertinoColors.separator.resolveFrom(context).withOpacity(0.4),
+              color: CupertinoColors.separator
+                  .resolveFrom(context)
+                  .withOpacity(0.4),
               width: 0.6,
             ),
           ),
@@ -683,7 +708,9 @@ class _NonmodalSheetOverlayState extends State<_NonmodalSheetOverlay>
                         width: 40,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: CupertinoColors.systemGrey2.resolveFrom(context),
+                          color: CupertinoColors.systemGrey2.resolveFrom(
+                            context,
+                          ),
                           borderRadius: BorderRadius.circular(2.5),
                         ),
                       ),
@@ -733,25 +760,32 @@ class _NonmodalSheetOverlayState extends State<_NonmodalSheetOverlay>
   }
 
   List<Widget> _buildContent(BuildContext context) {
-    final resolvedItemBackground = _resolveDynamicColor(context, widget.itemBackgroundColor) ??
-        CupertinoColors.secondarySystemBackground.resolveFrom(context).withOpacity(0.8);
+    final resolvedItemBackground =
+        _resolveDynamicColor(context, widget.itemBackgroundColor) ??
+        CupertinoColors.secondarySystemBackground
+            .resolveFrom(context)
+            .withOpacity(0.8);
     final resolvedItemText =
-        _resolveDynamicColor(context, widget.itemTextColor) ?? CupertinoColors.label.resolveFrom(context);
+        _resolveDynamicColor(context, widget.itemTextColor) ??
+        CupertinoColors.label.resolveFrom(context);
     final resolvedItemTint =
-        _resolveDynamicColor(context, widget.itemTintColor) ?? CupertinoColors.activeBlue.resolveFrom(context);
+        _resolveDynamicColor(context, widget.itemTintColor) ??
+        CupertinoColors.activeBlue.resolveFrom(context);
 
     final content = <Widget>[];
 
     if (widget.useCustomHeader && widget.message != null) {
       content
-        ..add(Text(
-          widget.message!,
-          style: TextStyle(
-            fontSize: 15,
-            color: CupertinoColors.secondaryLabel.resolveFrom(context),
+        ..add(
+          Text(
+            widget.message!,
+            style: TextStyle(
+              fontSize: 15,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ))
+        )
         ..add(const SizedBox(height: 12));
     }
 
@@ -793,10 +827,7 @@ class _NonmodalSheetOverlayState extends State<_NonmodalSheetOverlay>
                 Expanded(
                   child: Text(
                     item.title!,
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: resolvedItemText,
-                    ),
+                    style: TextStyle(fontSize: 17, color: resolvedItemText),
                   ),
                 ),
               ],
@@ -850,14 +881,18 @@ class _CustomHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedBackground = _resolveDynamicColor(context, backgroundColor) ??
+    final resolvedBackground =
+        _resolveDynamicColor(context, backgroundColor) ??
         CupertinoColors.systemBackground.resolveFrom(context).withOpacity(0.92);
-    final resolvedDivider = _resolveDynamicColor(context, dividerColor) ??
+    final resolvedDivider =
+        _resolveDynamicColor(context, dividerColor) ??
         CupertinoColors.separator.resolveFrom(context).withOpacity(0.6);
     final resolvedTitleColor =
-        _resolveDynamicColor(context, titleColor) ?? CupertinoColors.label.resolveFrom(context);
+        _resolveDynamicColor(context, titleColor) ??
+        CupertinoColors.label.resolveFrom(context);
     final resolvedCloseColor =
-        _resolveDynamicColor(context, closeButtonColor) ?? CupertinoColors.label.resolveFrom(context);
+        _resolveDynamicColor(context, closeButtonColor) ??
+        CupertinoColors.label.resolveFrom(context);
 
     final closeButton = CupertinoButton(
       padding: const EdgeInsets.all(8),
@@ -894,11 +929,7 @@ class _CustomHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (showDivider)
-          Container(
-            height: 0.6,
-            color: resolvedDivider,
-          ),
+        if (showDivider) Container(height: 0.6, color: resolvedDivider),
       ],
     );
   }
@@ -926,7 +957,8 @@ class _StandardHeader extends StatelessWidget {
     final titleColor = CupertinoColors.label.resolveFrom(context);
     final subtitleColor = CupertinoColors.secondaryLabel.resolveFrom(context);
     final closeColor =
-        _resolveDynamicColor(context, closeButtonColor) ?? CupertinoColors.label.resolveFrom(context);
+        _resolveDynamicColor(context, closeButtonColor) ??
+        CupertinoColors.label.resolveFrom(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
@@ -951,10 +983,7 @@ class _StandardHeader extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     message!,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: subtitleColor,
-                    ),
+                    style: TextStyle(fontSize: 15, color: subtitleColor),
                     textAlign: TextAlign.center,
                   ),
                 ],

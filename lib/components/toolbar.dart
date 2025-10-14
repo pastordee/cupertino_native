@@ -4,15 +4,17 @@ import 'package:flutter/services.dart';
 
 import '../channel/params.dart';
 import '../style/sf_symbol.dart';
+import 'search_config.dart';
+import 'search_bar.dart';
 
 /// Alignment options for middle toolbar actions.
 enum CNToolbarMiddleAlignment {
   /// Position middle close to leading (left side).
   leading,
-  
+
   /// Position middle in the center.
   center,
-  
+
   /// Position middle close to trailing (right side).
   trailing,
 }
@@ -20,31 +22,27 @@ enum CNToolbarMiddleAlignment {
 /// Action item for toolbar trailing/leading positions.
 class CNToolbarAction {
   /// Creates a toolbar action item.
-  const CNToolbarAction({
-    this.icon,
-    this.label,
-    this.onPressed,
-    this.padding,
-  })  : _isFixedSpace = false,
-        _isFlexibleSpace = false;
+  const CNToolbarAction({this.icon, this.label, this.onPressed, this.padding})
+    : _isFixedSpace = false,
+      _isFlexibleSpace = false;
 
   /// Creates a fixed space item with specific width.
   const CNToolbarAction.fixedSpace(double width)
-      : icon = null,
-        label = null,
-        onPressed = null,
-        padding = width,
-        _isFixedSpace = true,
-        _isFlexibleSpace = false;
+    : icon = null,
+      label = null,
+      onPressed = null,
+      padding = width,
+      _isFixedSpace = true,
+      _isFlexibleSpace = false;
 
   /// Creates a flexible space that expands to fill available space.
   const CNToolbarAction.flexibleSpace()
-      : icon = null,
-        label = null,
-        onPressed = null,
-        padding = null,
-        _isFixedSpace = false,
-        _isFlexibleSpace = true;
+    : icon = null,
+      label = null,
+      onPressed = null,
+      padding = null,
+      _isFixedSpace = false,
+      _isFlexibleSpace = true;
 
   /// SF Symbol icon for the action.
   final CNSymbol? icon;
@@ -92,7 +90,40 @@ class CNToolbar extends StatefulWidget {
     this.tint,
     this.height,
     this.pillHeight,
-  });
+  }) : searchConfig = null,
+       contextIcon = null,
+       _isSearchEnabled = false;
+
+  /// Creates a toolbar with integrated search functionality.
+  ///
+  /// When the search icon is tapped, the toolbar animates to show a search bar
+  /// with optional context indicator. Search button is automatically added to trailing actions.
+  ///
+  /// Example:
+  /// ```dart
+  /// CNToolbar.search(
+  ///   leading: [CNToolbarAction(icon: CNSymbol('star.fill'), onPressed: () {})],
+  ///   searchConfig: CNSearchConfig(
+  ///     placeholder: 'Search',
+  ///     onSearchTextChanged: (text) => print(text),
+  ///     resultsBuilder: (context, text) => SearchResults(text),
+  ///   ),
+  ///   contextIcon: CNSymbol('apps.iphone'),
+  /// )
+  /// ```
+  const CNToolbar.search({
+    super.key,
+    this.leading,
+    this.middle,
+    this.trailing,
+    required this.searchConfig,
+    this.contextIcon,
+    this.middleAlignment = CNToolbarMiddleAlignment.center,
+    this.transparent = false,
+    this.tint,
+    this.height,
+    this.pillHeight,
+  }) : _isSearchEnabled = true;
 
   /// Leading actions (buttons/icons on the left).
   final List<CNToolbarAction>? leading;
@@ -101,6 +132,7 @@ class CNToolbar extends StatefulWidget {
   final List<CNToolbarAction>? middle;
 
   /// Trailing actions (buttons/icons on the right).
+  /// For search-enabled toolbar, search button is added automatically.
   final List<CNToolbarAction>? trailing;
 
   /// Alignment of middle actions.
@@ -122,8 +154,22 @@ class CNToolbar extends StatefulWidget {
   /// Controls the vertical size of the pill-shaped button groups.
   final double? pillHeight;
 
+  /// Search configuration (only for search-enabled toolbar).
+  final CNSearchConfig? searchConfig;
+
+  /// Optional icon to show when search is active (represents previous context).
+  final CNSymbol? contextIcon;
+
+  /// Internal flag to indicate search functionality is enabled.
+  final bool _isSearchEnabled;
+
   @override
-  State<CNToolbar> createState() => _CNToolbarState();
+  State<CNToolbar> createState() {
+    if (_isSearchEnabled) {
+      return _CNToolbarSearchState();
+    }
+    return _CNToolbarState();
+  }
 }
 
 class _CNToolbarState extends State<CNToolbar> {
@@ -177,36 +223,75 @@ class _CNToolbarState extends State<CNToolbar> {
                 child: Icon(CupertinoIcons.ellipsis_circle),
               )
             : null,
-        backgroundColor: widget.transparent ? CupertinoColors.transparent : null,
+        backgroundColor: widget.transparent
+            ? CupertinoColors.transparent
+            : null,
       );
     }
 
     final leadingIcons =
-        widget.leading?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
+        widget.leading
+            ?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? ''))
+            .toList() ??
+        [];
     final leadingLabels =
-        widget.leading?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
+        widget.leading
+            ?.map((e) => e.isSpacer ? '' : (e.label ?? ''))
+            .toList() ??
+        [];
     final leadingPaddings =
         widget.leading?.map((e) => e.padding ?? 0.0).toList() ?? [];
     final leadingSpacers =
-        widget.leading?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
-    
+        widget.leading
+            ?.map(
+              (e) => e.isFlexibleSpace
+                  ? 'flexible'
+                  : (e.isFixedSpace ? 'fixed' : ''),
+            )
+            .toList() ??
+        [];
+
     final middleIcons =
-        widget.middle?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
+        widget.middle
+            ?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? ''))
+            .toList() ??
+        [];
     final middleLabels =
-        widget.middle?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
+        widget.middle?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ??
+        [];
     final middlePaddings =
         widget.middle?.map((e) => e.padding ?? 0.0).toList() ?? [];
     final middleSpacers =
-        widget.middle?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
-    
+        widget.middle
+            ?.map(
+              (e) => e.isFlexibleSpace
+                  ? 'flexible'
+                  : (e.isFixedSpace ? 'fixed' : ''),
+            )
+            .toList() ??
+        [];
+
     final trailingIcons =
-        widget.trailing?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
+        widget.trailing
+            ?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? ''))
+            .toList() ??
+        [];
     final trailingLabels =
-        widget.trailing?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
+        widget.trailing
+            ?.map((e) => e.isSpacer ? '' : (e.label ?? ''))
+            .toList() ??
+        [];
     final trailingPaddings =
         widget.trailing?.map((e) => e.padding ?? 0.0).toList() ?? [];
     final trailingSpacers =
-        widget.trailing?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
+        widget.trailing
+            ?.map(
+              (e) => e.isFlexibleSpace
+                  ? 'flexible'
+                  : (e.isFixedSpace ? 'fixed' : ''),
+            )
+            .toList() ??
+        [];
 
     final creationParams = <String, dynamic>{
       'title': '',
@@ -337,5 +422,143 @@ class _CNToolbarState extends State<CNToolbar> {
         if (h != null && h > 0) _intrinsicHeight = h;
       });
     } catch (_) {}
+  }
+}
+
+/// State class for search-enabled toolbar.
+class _CNToolbarSearchState extends State<CNToolbar>
+    with SingleTickerProviderStateMixin {
+  bool _isSearchExpanded = false;
+  String _searchText = '';
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: widget.searchConfig!.animationDuration,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _expandSearch() {
+    setState(() => _isSearchExpanded = true);
+    _animationController.forward();
+  }
+
+  void _collapseSearch() {
+    _animationController.reverse().then((_) {
+      if (mounted) {
+        setState(() {
+          _isSearchExpanded = false;
+          _searchText = '';
+        });
+      }
+    });
+    widget.searchConfig!.onSearchCancelled?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isSearchExpanded) {
+      return _buildSearchView();
+    } else {
+      return _buildNormalView();
+    }
+  }
+
+  Widget _buildNormalView() {
+    // Add search button to trailing actions
+    final searchAction = CNToolbarAction(
+      icon: widget.searchConfig!.searchIcon,
+      onPressed: _expandSearch,
+    );
+
+    final trailingWithSearch = [...?widget.trailing, searchAction];
+
+    return CNToolbar(
+      leading: widget.leading,
+      middle: widget.middle,
+      trailing: trailingWithSearch,
+      middleAlignment: widget.middleAlignment,
+      transparent: widget.transparent,
+      tint: widget.tint,
+      height: widget.height,
+      pillHeight: widget.pillHeight,
+    );
+  }
+
+  Widget _buildSearchView() {
+    final config = widget.searchConfig!;
+
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Stack(
+        children: [
+          // Search results overlay
+          if (config.showResultsOverlay &&
+              config.resultsBuilder != null &&
+              _searchText.isNotEmpty)
+            Positioned.fill(
+              child: config.resultsBuilder!(context, _searchText),
+            ),
+          // Search bar with context icon
+          SafeArea(
+            top: false,
+            child: Container(
+              height: config.searchBarHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+              child: Row(
+                children: [
+                  // Context icon (if provided)
+                  if (widget.contextIcon != null)
+                    SizedBox(
+                      width: 80,
+                      child: CNToolbar(
+                        trailing: [
+                          CNToolbarAction(
+                            icon: widget.contextIcon,
+                            onPressed: _collapseSearch,
+                          ),
+                        ],
+                        height: 44,
+                        transparent: true,
+                      ),
+                    ),
+                  const SizedBox(width: 1),
+                  // Search bar
+                  Expanded(
+                    child: CNSearchBar(
+                      placeholder: config.placeholder,
+                      showsCancelButton: config.showsCancelButton,
+                      onTextChanged: (text) {
+                        setState(() => _searchText = text);
+                        config.onSearchTextChanged?.call(text);
+                      },
+                      onSearchButtonClicked: (text) {
+                        config.onSearchSubmitted?.call(text);
+                      },
+                      onCancelButtonClicked: _collapseSearch,
+                      height: config.searchBarHeight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

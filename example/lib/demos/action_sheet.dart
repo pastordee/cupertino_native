@@ -37,9 +37,12 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
             const SizedBox(height: 24),
 
             // ===== ALERTS SECTION =====
-            _buildMainSectionHeader('Native Alerts', icon: CupertinoIcons.exclamationmark_triangle),
+            _buildMainSectionHeader(
+              'Native Alerts',
+              icon: CupertinoIcons.exclamationmark_triangle,
+            ),
             const SizedBox(height: 12),
-            
+
             // Alert Example 1: Information Alert
             _buildSectionHeader('Information Alert'),
             _buildExampleCard(
@@ -77,14 +80,18 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
             const SizedBox(height: 32),
 
             // ===== ACTION SHEETS SECTION =====
-            _buildMainSectionHeader('Native Action Sheets', icon: CupertinoIcons.square_list),
+            _buildMainSectionHeader(
+              'Native Action Sheets',
+              icon: CupertinoIcons.square_list,
+            ),
             const SizedBox(height: 12),
 
             // Example 1: Mail - Delete or Save Draft
             _buildSectionHeader('Mail Style - Delete Draft'),
             _buildExampleCard(
               title: 'Delete or Save Draft',
-              description: 'Common pattern in Mail app when canceling a message',
+              description:
+                  'Common pattern in Mail app when canceling a message',
               onTap: () => _showDeleteDraftSheet(),
             ),
             const SizedBox(height: 16),
@@ -122,7 +129,7 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
         ),
       ),
     );
-  } 
+  }
 
   Widget _buildInfoSection() {
     return Container(
@@ -144,10 +151,7 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
               const SizedBox(width: 8),
               const Text(
                 'Action Sheet Best Practices',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -158,10 +162,7 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
             '• Always include Cancel button\n'
             '• Keep titles short (single line)\n'
             '• Add message only if necessary',
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 15, height: 1.4),
           ),
         ],
       ),
@@ -219,7 +220,9 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
                     description,
                     style: TextStyle(
                       fontSize: 15,
-                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                      color: CupertinoColors.secondaryLabel.resolveFrom(
+                        context,
+                      ),
                     ),
                   ),
                 ],
@@ -258,10 +261,7 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
           const SizedBox(height: 8),
           Text(
             _lastAction,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
           // const Divider(),
@@ -357,7 +357,8 @@ class _ActionSheetDemoPageState extends State<ActionSheetDemoPage> {
   Future<void> _showDeleteAccountAlert() async {
     final confirmed = await CNAlert.showDestructiveConfirmation(
       title: 'Delete Account?',
-      message: 'This action cannot be undone. All your data will be permanently deleted.',
+      message:
+          'This action cannot be undone. All your data will be permanently deleted.',
       destructiveTitle: 'Delete Account',
       onDestroy: () {
         setState(() => _lastAction = 'Account deleted');
