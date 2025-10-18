@@ -191,6 +191,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                 leading: [
                   CNNavigationBarAction(
                     icon: CNSymbol('chevron.left'),
+                    iconSize: 20,
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -198,6 +199,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                   CNNavigationBarAction.fixedSpace(5),
                   CNNavigationBarAction(
                     label: 'Back',
+                    labelSize: 14,
                     padding: 2,
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -205,9 +207,28 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                   ),
                 ],
                 title: 'Native Nav Bar',
+                titleSize: 20,
+                onTitlePressed: () {
+                  print('Title tapped!');
+                  // Show a simple alert to demonstrate the tap
+                  showCupertinoDialog(
+                    context: context,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: const Text('Title Tapped'),
+                      content: const Text('The navigation bar title was tapped!'),
+                      actions: [
+                        CupertinoDialogAction(
+                          child: const Text('OK'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  );
+                },
                 trailing: [
                   CNNavigationBarAction(
                     icon: CNSymbol('gear'),
+                    iconSize: 22,
                     onPressed: () {
                       print('Settings tapped');
                     },
@@ -215,6 +236,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                   CNNavigationBarAction.flexibleSpace(),
                   CNNavigationBarAction(
                     icon: CNSymbol('plus'),
+                    iconSize: 18,
                     onPressed: () {
                       print('Add tapped');
                     },

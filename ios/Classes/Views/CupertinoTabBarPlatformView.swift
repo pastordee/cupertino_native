@@ -24,6 +24,7 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
     self.container = UIView(frame: frame)
 
     var labels: [String] = []
+    var labelSizes: [NSNumber] = []
     var symbols: [String] = []
     var sizes: [NSNumber] = [] // ignored; use system metrics
     var colors: [NSNumber] = [] // ignored; use tintColor
@@ -40,6 +41,7 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
 
     if let dict = args as? [String: Any] {
       labels = (dict["labels"] as? [String]) ?? []
+      labelSizes = (dict["labelSizes"] as? [NSNumber]) ?? []
       symbols = (dict["sfSymbols"] as? [String]) ?? []
       sizes = (dict["sfSymbolSizes"] as? [NSNumber]) ?? []
       colors = (dict["sfSymbolColors"] as? [NSNumber]) ?? []
@@ -70,7 +72,12 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
         if let customImage = self.customImages[i] {
           image = customImage
         } else if i < symbols.count {
-          image = UIImage(systemName: symbols[i])
+          // Apply custom icon size if specified
+          let iconSize: CGFloat = (i < sizes.count && sizes[i].doubleValue > 0) ? CGFloat(sizes[i].doubleValue) : 25
+          if let baseImage = UIImage(systemName: symbols[i]) {
+            let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .regular)
+            image = baseImage.withConfiguration(config)
+          }
         }
         let title = (i < labels.count) ? labels[i] : nil
         let item = UITabBarItem(title: title, image: image, selectedImage: image)
@@ -93,6 +100,19 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
       if #available(iOS 13.0, *) {
         let ap = UITabBarAppearance()
         ap.configureWithDefaultBackground()
+        
+        // Apply custom label size if specified (use first non-zero label size as global setting)
+        let customLabelSize = labelSizes.first { $0.doubleValue > 0 }?.doubleValue
+        if let labelSize = customLabelSize, labelSize > 0 {
+          let font = UIFont.systemFont(ofSize: CGFloat(labelSize))
+          ap.stackedLayoutAppearance.normal.titleTextAttributes = [.font: font]
+          ap.stackedLayoutAppearance.selected.titleTextAttributes = [.font: font]
+          ap.inlineLayoutAppearance.normal.titleTextAttributes = [.font: font]
+          ap.inlineLayoutAppearance.selected.titleTextAttributes = [.font: font]
+          ap.compactInlineLayoutAppearance.normal.titleTextAttributes = [.font: font]
+          ap.compactInlineLayoutAppearance.selected.titleTextAttributes = [.font: font]
+        }
+        
         return ap
       }
       return nil

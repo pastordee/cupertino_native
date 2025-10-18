@@ -97,7 +97,52 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      // Demo toolbar with size examples
+                _buildCard(
+                  'Size Examples',
+                  'Custom label and icon sizes',
+                  child: CNToolbar(
+                    leading: [
+                      CNToolbarAction(
+                        label: 'Small',
+                        labelSize: 12,
+                        onPressed: () {},
+                      ),
+                    ],
+                    middle: [
+                      CNToolbarAction(
+                        icon: CNSymbol('star.fill'),
+                        iconSize: 16,
+                        onPressed: () {},
+                      ),
+                      CNToolbarAction(
+                        label: 'Medium',
+                        labelSize: 16,
+                        onPressed: () {},
+                      ),
+                      CNToolbarAction(
+                        icon: CNSymbol('heart.fill'),
+                        iconSize: 20,
+                        onPressed: () {},
+                      ),
+                    ],
+                    trailing: [
+                      CNToolbarAction(
+                        label: 'Large',
+                        labelSize: 18,
+                        onPressed: () {},
+                      ),
+                      CNToolbarAction(
+                        icon: CNSymbol('gear'),
+                        iconSize: 24,
+                        onPressed: () {},
+                      ),
+                    ],
+                    transparent: _isTransparent,
+                    height: 60,
+                  ),
+                ),
+                const SizedBox(height: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -164,6 +209,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                 leading: [
                   CNToolbarAction(
                     label: 'Edit',
+                    labelSize: 15,
                     onPressed: () => print('Edit tapped'),
                   ),
                   const CNToolbarAction.fixedSpace(
@@ -171,6 +217,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                   ), // Fixed space between text labels
                   CNToolbarAction(
                     label: 'Share',
+                    labelSize: 15,
                     padding: 2,
                     onPressed: () => print('Share tapped'),
                   ),
@@ -191,12 +238,12 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
 
                 trailing: [
                   CNToolbarAction(
-                    icon: CNSymbol('ellipsis', size: 30),
+                    icon: CNSymbol('ellipsis', size: 10),
                     onPressed: () => print('More tapped'),
                   ),
                   const CNToolbarAction.flexibleSpace(),
                   CNToolbarAction(
-                    icon: CNSymbol('play', size: 30),
+                    icon: CNSymbol('play', size: 20),
                     onPressed: () => print('Play tapped'),
                   ),
                 ],
@@ -309,6 +356,49 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
               height: 40,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(
+    String title,
+    String description, {
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground
+            .resolveFrom(context)
+            .withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 15,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+          child,
         ],
       ),
     );

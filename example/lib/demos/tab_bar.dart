@@ -73,22 +73,33 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
       // Using split mode to create visual separation for search tab
       // This matches the iOS pattern where search is on the trailing edge
       items: const [
-        CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
+        CNTabBarItem(
+          label: 'Home', 
+          icon: CNSymbol('house.fill'),
+          labelSize: 10,
+          iconSize: 20,
+        ),
         CNTabBarItem(
           label: 'Radio',
           icon: CNSymbol('dot.radiowaves.left.and.right'),
+          labelSize: 12,
+          iconSize: 24,
         ),
         CNTabBarItem(
           label: 'Library',
           icon: CNSymbol('music.note.list'),
           badgeValue: 99, // Shows as "99+"
           badgeColor: CupertinoColors.systemRed,
+          labelSize: 14,
+          iconSize: 28,
         ),
         CNTabBarItem(
           label: 'Search',
           icon: CNSymbol('magnifyingglass'),
           badgeValue: 3,
           badgeColor: CupertinoColors.systemBlue,
+          labelSize: 16,
+          iconSize: 32,
         ),
       ],
       currentIndex: _index,

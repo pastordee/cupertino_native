@@ -16,6 +16,8 @@ class CNNavigationBarAction {
     this.label,
     this.onPressed,
     this.padding,
+    this.labelSize,
+    this.iconSize,
   })  : _isFixedSpace = false,
         _isFlexibleSpace = false;
 
@@ -23,6 +25,8 @@ class CNNavigationBarAction {
   const CNNavigationBarAction.fixedSpace(double width)
       : icon = null,
         label = null,
+        labelSize = null,
+        iconSize = null,
         onPressed = null,
         padding = width,
         _isFixedSpace = true,
@@ -32,6 +36,8 @@ class CNNavigationBarAction {
   const CNNavigationBarAction.flexibleSpace()
       : icon = null,
         label = null,
+        labelSize = null,
+        iconSize = null,
         onPressed = null,
         padding = null,
         _isFixedSpace = false,
@@ -42,6 +48,15 @@ class CNNavigationBarAction {
 
   /// Text label for the action (used if icon is null).
   final String? label;
+
+  /// Font size for the label text in points.
+  /// If null, uses the platform default size.
+  final double? labelSize;
+
+  /// Size for the icon in points.
+  /// If null, uses the icon's intrinsic size or platform default.
+  /// This overrides the size specified in the CNSymbol.
+  final double? iconSize;
 
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
@@ -77,6 +92,8 @@ class CNNavigationBar extends StatefulWidget {
     super.key,
     this.leading,
     this.title,
+    this.titleSize,
+    this.onTitlePressed,
     this.trailing,
     this.largeTitle = false,
     this.transparent = true,
@@ -108,6 +125,8 @@ class CNNavigationBar extends StatefulWidget {
     super.key,
     this.leading,
     this.title,
+    this.titleSize,
+    this.onTitlePressed,
     this.trailing,
     required this.searchConfig,
     this.largeTitle = false,
@@ -144,6 +163,8 @@ class CNNavigationBar extends StatefulWidget {
     super.key,
     this.leading,
     this.title,
+    this.titleSize,
+    this.onTitlePressed,
     this.trailing,
     required this.scrollableContent,
     this.largeTitle = true,
@@ -159,6 +180,14 @@ class CNNavigationBar extends StatefulWidget {
 
   /// Title text for the navigation bar.
   final String? title;
+
+  /// Font size for the title text in points.
+  /// If null, uses the platform default title size.
+  final double? titleSize;
+
+  /// Callback when the title is tapped.
+  /// If null, the title is not clickable.
+  final VoidCallback? onTitlePressed;
 
   /// Trailing actions (buttons/icons on the right).
   /// For search-enabled navigation bar, search button is added automatically.
@@ -263,6 +292,10 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         widget.leading?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
     final leadingPaddings =
         widget.leading?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final leadingLabelSizes =
+        widget.leading?.map((e) => e.labelSize ?? 0.0).toList() ?? [];
+    final leadingIconSizes =
+        widget.leading?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final leadingSpacers =
         widget.leading?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
     final trailingIcons =
@@ -271,18 +304,28 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         widget.trailing?.map((e) => e.isSpacer ? '' : (e.label ?? '')).toList() ?? [];
     final trailingPaddings =
         widget.trailing?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final trailingLabelSizes =
+        widget.trailing?.map((e) => e.labelSize ?? 0.0).toList() ?? [];
+    final trailingIconSizes =
+        widget.trailing?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final trailingSpacers =
         widget.trailing?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
 
     final creationParams = <String, dynamic>{
       'title': widget.title ?? '',
+      'titleSize': widget.titleSize ?? 0.0,
+      'titleClickable': widget.onTitlePressed != null,
       'leadingIcons': leadingIcons,
       'leadingLabels': leadingLabels,
       'leadingPaddings': leadingPaddings,
+      'leadingLabelSizes': leadingLabelSizes,
+      'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
       'trailingPaddings': trailingPaddings,
+      'trailingLabelSizes': trailingLabelSizes,
+      'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
       'largeTitle': widget.largeTitle,
       'transparent': widget.transparent,
@@ -337,6 +380,8 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
           index < widget.trailing!.length) {
         widget.trailing![index].onPressed?.call();
       }
+    } else if (call.method == 'titleTapped') {
+      widget.onTitlePressed?.call();
     }
     return null;
   }
@@ -461,6 +506,7 @@ class _CNNavigationBarSearchState extends State<CNNavigationBar>
     return CNNavigationBar(
       leading: widget.leading,
       title: widget.title,
+      onTitlePressed: widget.onTitlePressed,
       trailing: trailingWithSearch,
       largeTitle: widget.largeTitle,
       transparent: widget.transparent,
@@ -613,6 +659,7 @@ class _CNNavigationBarScrollableState extends State<CNNavigationBar> {
         CNNavigationBar(
           leading: widget.leading,
           title: widget.title,
+          onTitlePressed: widget.onTitlePressed,
           trailing: widget.trailing,
           largeTitle: widget.largeTitle,
           transparent: widget.transparent,

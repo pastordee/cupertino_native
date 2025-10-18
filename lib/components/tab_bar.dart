@@ -21,6 +21,8 @@ class CNTabBarItem {
     this.imageSize,
     this.badgeValue,
     this.badgeColor,
+    this.labelSize,
+    this.iconSize,
   }) : assert(
          icon == null || image == null,
          'Cannot provide both icon and image',
@@ -29,8 +31,17 @@ class CNTabBarItem {
   /// Optional tab item label.
   final String? label;
 
+  /// Font size for the label text in points.
+  /// If null, uses the platform default size.
+  final double? labelSize;
+
   /// Optional SF Symbol for the item.
   final CNSymbol? icon;
+
+  /// Size for the icon in points.
+  /// If null, uses the icon's intrinsic size or platform default.
+  /// This overrides the size specified in the CNSymbol.
+  final double? iconSize;
 
   /// Optional custom image provider for the item.
   /// Cannot be used together with [icon].
@@ -257,6 +268,7 @@ class _CNTabBarState extends State<CNTabBar> {
   double? _intrinsicHeight;
   double? _intrinsicWidth;
   List<String>? _lastLabels;
+  List<double>? _lastLabelSizes;
   List<String>? _lastSymbols;
   List<String>? _lastImageKeys;
   List<String>? _lastBadges;
@@ -305,9 +317,10 @@ class _CNTabBarState extends State<CNTabBar> {
     }
 
     final labels = widget.items.map((e) => e.label ?? '').toList();
+    final labelSizes = widget.items.map((e) => e.labelSize ?? 0.0).toList();
     final symbols = widget.items.map((e) => e.icon?.name ?? '').toList();
     final sizes = widget.items
-        .map((e) => (widget.iconSize ?? e.icon?.size))
+        .map((e) => (e.iconSize ?? widget.iconSize ?? e.icon?.size))
         .toList();
     final colors = widget.items
         .map((e) => resolveColorToArgb(e.icon?.color, context))
@@ -332,6 +345,7 @@ class _CNTabBarState extends State<CNTabBar> {
 
     final creationParams = <String, dynamic>{
       'labels': labels,
+      'labelSizes': labelSizes,
       'sfSymbols': symbols,
       'sfSymbolSizes': sizes,
       'sfSymbolColors': colors,
@@ -539,6 +553,7 @@ class _CNTabBarState extends State<CNTabBar> {
 
     // Items update (for hot reload or dynamic changes)
     final labels = widget.items.map((e) => e.label ?? '').toList();
+    final labelSizes = widget.items.map((e) => e.labelSize ?? 0.0).toList();
     final symbols = widget.items.map((e) => e.icon?.name ?? '').toList();
     final imageKeys = widget.items
         .map((e) => e.image?.hashCode.toString() ?? '')
@@ -550,11 +565,13 @@ class _CNTabBarState extends State<CNTabBar> {
         .map((e) => resolveColorToArgb(e.badgeColor, context))
         .toList();
     if (_lastLabels?.join('|') != labels.join('|') ||
+        _lastLabelSizes?.join('|') != labelSizes.join('|') ||
         _lastSymbols?.join('|') != symbols.join('|') ||
         _lastImageKeys?.join('|') != imageKeys.join('|') ||
         _lastBadges?.join('|') != badges.join('|')) {
       await ch.invokeMethod('setItems', {
         'labels': labels,
+        'labelSizes': labelSizes,
         'sfSymbols': symbols,
         'imageKeys': imageKeys,
         'badges': badges,
@@ -562,6 +579,7 @@ class _CNTabBarState extends State<CNTabBar> {
         'selectedIndex': widget.currentIndex,
       });
       _lastLabels = labels;
+      _lastLabelSizes = labelSizes;
       _lastSymbols = symbols;
       _lastImageKeys = imageKeys;
       _lastBadges = badges;
@@ -607,6 +625,7 @@ class _CNTabBarState extends State<CNTabBar> {
 
   void _cacheItems() {
     _lastLabels = widget.items.map((e) => e.label ?? '').toList();
+    _lastLabelSizes = widget.items.map((e) => e.labelSize ?? 0.0).toList();
     _lastSymbols = widget.items.map((e) => e.icon?.name ?? '').toList();
     _lastImageKeys = widget.items
         .map((e) => e.image?.hashCode.toString() ?? '')

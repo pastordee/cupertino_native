@@ -22,9 +22,15 @@ enum CNToolbarMiddleAlignment {
 /// Action item for toolbar trailing/leading positions.
 class CNToolbarAction {
   /// Creates a toolbar action item.
-  const CNToolbarAction({this.icon, this.label, this.onPressed, this.padding})
-    : _isFixedSpace = false,
-      _isFlexibleSpace = false;
+  const CNToolbarAction({
+    this.icon, 
+    this.label, 
+    this.onPressed, 
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  }) : _isFixedSpace = false,
+       _isFlexibleSpace = false;
 
   /// Creates a fixed space item with specific width.
   const CNToolbarAction.fixedSpace(double width)
@@ -32,6 +38,8 @@ class CNToolbarAction {
       label = null,
       onPressed = null,
       padding = width,
+      labelSize = null,
+      iconSize = null,
       _isFixedSpace = true,
       _isFlexibleSpace = false;
 
@@ -41,6 +49,8 @@ class CNToolbarAction {
       label = null,
       onPressed = null,
       padding = null,
+      labelSize = null,
+      iconSize = null,
       _isFixedSpace = false,
       _isFlexibleSpace = true;
 
@@ -49,6 +59,15 @@ class CNToolbarAction {
 
   /// Text label for the action (used if icon is null).
   final String? label;
+
+  /// Font size for the label text in points.
+  /// If null, uses the platform default size.
+  final double? labelSize;
+
+  /// Size for the icon in points.
+  /// If null, uses the icon's intrinsic size or platform default.
+  /// This overrides the size specified in the CNSymbol.
+  final double? iconSize;
 
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
@@ -241,6 +260,10 @@ class _CNToolbarState extends State<CNToolbar> {
         [];
     final leadingPaddings =
         widget.leading?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final leadingLabelSizes =
+        widget.leading?.map((e) => e.labelSize ?? 0.0).toList() ?? [];
+    final leadingIconSizes =
+        widget.leading?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final leadingSpacers =
         widget.leading
             ?.map(
@@ -261,6 +284,10 @@ class _CNToolbarState extends State<CNToolbar> {
         [];
     final middlePaddings =
         widget.middle?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final middleLabelSizes =
+        widget.middle?.map((e) => e.labelSize ?? 0.0).toList() ?? [];
+    final middleIconSizes =
+        widget.middle?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final middleSpacers =
         widget.middle
             ?.map(
@@ -283,6 +310,10 @@ class _CNToolbarState extends State<CNToolbar> {
         [];
     final trailingPaddings =
         widget.trailing?.map((e) => e.padding ?? 0.0).toList() ?? [];
+    final trailingLabelSizes =
+        widget.trailing?.map((e) => e.labelSize ?? 0.0).toList() ?? [];
+    final trailingIconSizes =
+        widget.trailing?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final trailingSpacers =
         widget.trailing
             ?.map(
@@ -298,15 +329,21 @@ class _CNToolbarState extends State<CNToolbar> {
       'leadingIcons': leadingIcons,
       'leadingLabels': leadingLabels,
       'leadingPaddings': leadingPaddings,
+      'leadingLabelSizes': leadingLabelSizes,
+      'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
       'middleIcons': middleIcons,
       'middleLabels': middleLabels,
       'middlePaddings': middlePaddings,
+      'middleLabelSizes': middleLabelSizes,
+      'middleIconSizes': middleIconSizes,
       'middleSpacers': middleSpacers,
       'middleAlignment': widget.middleAlignment.name,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
       'trailingPaddings': trailingPaddings,
+      'trailingLabelSizes': trailingLabelSizes,
+      'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
       'transparent': widget.transparent,
       'isDark': _isDark,
