@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../channel/params.dart';
 import '../style/sf_symbol.dart';
 import 'icon.dart';
+import 'popup_menu_button.dart';
 import 'search_config.dart';
 import 'search_bar.dart';
 
@@ -18,8 +20,40 @@ class CNNavigationBarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
-  })  : _isFixedSpace = false,
-        _isFlexibleSpace = false;
+  })  : popupMenuItems = null,
+        onPopupMenuSelected = null,
+        _isFixedSpace = false,
+        _isFlexibleSpace = false,
+        _usePopupMenuButton = false;
+
+  /// Creates a navigation bar action with a popup menu.
+  const CNNavigationBarAction.popupMenu({
+    this.icon,
+    this.label,
+    required this.popupMenuItems,
+    required this.onPopupMenuSelected,
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  })  : onPressed = null,
+        _isFixedSpace = false,
+        _isFlexibleSpace = false,
+        _usePopupMenuButton = false;
+
+  /// Creates a navigation bar action with a CNPopupMenuButton.
+  /// This provides a more native-looking popup menu button with built-in styling.
+  const CNNavigationBarAction.popupMenuButton({
+    this.icon,
+    this.label,
+    required this.popupMenuItems,
+    required this.onPopupMenuSelected,
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  })  : onPressed = null,
+        _isFixedSpace = false,
+        _isFlexibleSpace = false,
+        _usePopupMenuButton = true;
 
   /// Creates a fixed space item with specific width.
   const CNNavigationBarAction.fixedSpace(double width)
@@ -28,9 +62,12 @@ class CNNavigationBarAction {
         labelSize = null,
         iconSize = null,
         onPressed = null,
+        popupMenuItems = null,
+        onPopupMenuSelected = null,
         padding = width,
         _isFixedSpace = true,
-        _isFlexibleSpace = false;
+        _isFlexibleSpace = false,
+        _usePopupMenuButton = false;
 
   /// Creates a flexible space that expands to fill available space.
   const CNNavigationBarAction.flexibleSpace()
@@ -39,9 +76,12 @@ class CNNavigationBarAction {
         labelSize = null,
         iconSize = null,
         onPressed = null,
+        popupMenuItems = null,
+        onPopupMenuSelected = null,
         padding = null,
         _isFixedSpace = false,
-        _isFlexibleSpace = true;
+        _isFlexibleSpace = true,
+        _usePopupMenuButton = false;
 
   /// SF Symbol icon for the action.
   final CNSymbol? icon;
@@ -61,6 +101,14 @@ class CNNavigationBarAction {
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
 
+  /// Popup menu items to display when the action is pressed.
+  /// If provided, this action will show a popup menu instead of calling onPressed.
+  final List<CNPopupMenuEntry>? popupMenuItems;
+
+  /// Called when a popup menu item is selected.
+  /// The index corresponds to the position in the popupMenuItems list.
+  final ValueChanged<int>? onPopupMenuSelected;
+
   /// Custom padding for this action. If null, uses default platform padding.
   /// Specified in logical pixels. For fixed space, this is the width of the space.
   final double? padding;
@@ -71,6 +119,9 @@ class CNNavigationBarAction {
   /// Internal flag to indicate this is a flexible space item.
   final bool _isFlexibleSpace;
 
+  /// Internal flag to indicate this uses CNPopupMenuButton.
+  final bool _usePopupMenuButton;
+
   /// Returns true if this is a spacer (fixed or flexible).
   bool get isSpacer => _isFixedSpace || _isFlexibleSpace;
 
@@ -79,6 +130,12 @@ class CNNavigationBarAction {
 
   /// Returns true if this is a flexible space item.
   bool get isFlexibleSpace => _isFlexibleSpace;
+
+  /// Returns true if this action has a popup menu.
+  bool get hasPopupMenu => popupMenuItems != null && popupMenuItems!.isNotEmpty;
+
+  /// Returns true if this action uses CNPopupMenuButton.
+  bool get usePopupMenuButton => _usePopupMenuButton;
 }
 
 /// A Cupertino-native navigation bar with liquid glass translucent effect.
@@ -268,19 +325,11 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       // Fallback for non-Apple platforms
       return CupertinoNavigationBar(
         leading: widget.leading != null && widget.leading!.isNotEmpty
-            ? CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: widget.leading!.first.onPressed,
-                child: Icon(CupertinoIcons.back),
-              )
+            ? _buildActionWidget(widget.leading!.first)
             : null,
         middle: widget.title != null ? Text(widget.title!) : null,
         trailing: widget.trailing != null && widget.trailing!.isNotEmpty
-            ? CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: widget.trailing!.first.onPressed,
-                child: Icon(CupertinoIcons.ellipsis_circle),
-              )
+            ? _buildActionWidget(widget.trailing!.first)
             : null,
         backgroundColor: widget.transparent ? CupertinoColors.transparent : null,
       );
@@ -311,6 +360,49 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
     final trailingSpacers =
         widget.trailing?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
 
+    // Collect popup menu data for native implementation
+    final leadingPopupMenus = widget.leading?.map((action) {
+      if (action.hasPopupMenu) {
+        return action.popupMenuItems!.map((item) {
+          if (item is CNPopupMenuItem) {
+            return {
+              'type': 'item',
+              'label': item.label,
+              'icon': item.icon?.name ?? '',
+              'enabled': item.enabled,
+            };
+          } else if (item is CNPopupMenuDivider) {
+            return {
+              'type': 'divider',
+            };
+          }
+          return null;
+        }).where((item) => item != null).toList();
+      }
+      return null;
+    }).toList() ?? [];
+
+    final trailingPopupMenus = widget.trailing?.map((action) {
+      if (action.hasPopupMenu) {
+        return action.popupMenuItems!.map((item) {
+          if (item is CNPopupMenuItem) {
+            return {
+              'type': 'item',
+              'label': item.label,
+              'icon': item.icon?.name ?? '',
+              'enabled': item.enabled,
+            };
+          } else if (item is CNPopupMenuDivider) {
+            return {
+              'type': 'divider',
+            };
+          }
+          return null;
+        }).where((item) => item != null).toList();
+      }
+      return null;
+    }).toList() ?? [];
+
     final creationParams = <String, dynamic>{
       'title': widget.title ?? '',
       'titleSize': widget.titleSize ?? 0.0,
@@ -321,12 +413,14 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       'leadingLabelSizes': leadingLabelSizes,
       'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
+      'leadingPopupMenus': leadingPopupMenus,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
       'trailingPaddings': trailingPaddings,
       'trailingLabelSizes': trailingLabelSizes,
       'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
+      'trailingPopupMenus': trailingPopupMenus,
       'largeTitle': widget.largeTitle,
       'transparent': widget.transparent,
       'isDark': _isDark,
@@ -370,7 +464,12 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       if (index >= 0 &&
           widget.leading != null &&
           index < widget.leading!.length) {
-        widget.leading![index].onPressed?.call();
+        final action = widget.leading![index];
+        // For actions without popup menus, call onPressed directly
+        // Actions with popup menus are handled natively
+        if (!action.hasPopupMenu) {
+          action.onPressed?.call();
+        }
       }
     } else if (call.method == 'trailingTapped') {
       final args = call.arguments as Map?;
@@ -378,7 +477,31 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       if (index >= 0 &&
           widget.trailing != null &&
           index < widget.trailing!.length) {
-        widget.trailing![index].onPressed?.call();
+        final action = widget.trailing![index];
+        // For actions without popup menus, call onPressed directly
+        // Actions with popup menus are handled natively
+        if (!action.hasPopupMenu) {
+          action.onPressed?.call();
+        }
+      }
+    } else if (call.method == 'popupMenuSelected') {
+      final args = call.arguments as Map?;
+      final location = args?['location'] as String?;
+      final actionIndex = (args?['actionIndex'] as num?)?.toInt() ?? 0;
+      final menuIndex = (args?['menuIndex'] as num?)?.toInt() ?? 0;
+      
+      if (location == 'leading' &&
+          actionIndex >= 0 &&
+          widget.leading != null &&
+          actionIndex < widget.leading!.length) {
+        final action = widget.leading![actionIndex];
+        action.onPopupMenuSelected?.call(menuIndex);
+      } else if (location == 'trailing' &&
+          actionIndex >= 0 &&
+          widget.trailing != null &&
+          actionIndex < widget.trailing!.length) {
+        final action = widget.trailing![actionIndex];
+        action.onPopupMenuSelected?.call(menuIndex);
       }
     } else if (call.method == 'titleTapped') {
       widget.onTitlePressed?.call();
@@ -435,6 +558,72 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         if (h != null && h > 0) _intrinsicHeight = h;
       });
     } catch (_) {}
+  }
+
+  /// Builds a widget for the given navigation bar action.
+  Widget _buildActionWidget(CNNavigationBarAction action) {
+    if (action.hasPopupMenu && action.usePopupMenuButton) {
+      // Use CNPopupMenuButton for native-style popup menu
+      if (action.icon != null) {
+        return CNPopupMenuButton.icon(
+          buttonIcon: action.icon!,
+          items: action.popupMenuItems!,
+          onSelected: action.onPopupMenuSelected!,
+          size: action.iconSize ?? 44.0,
+        );
+      } else {
+        return CNPopupMenuButton(
+          buttonLabel: action.label ?? '',
+          items: action.popupMenuItems!,
+          onSelected: action.onPopupMenuSelected!,
+          height: 32.0,
+        );
+      }
+    } else if (action.hasPopupMenu) {
+      // Use traditional popup menu fallback
+      return CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () async {
+          final selected = await showCupertinoModalPopup<int>(
+            context: context,
+            builder: (ctx) {
+              return CupertinoActionSheet(
+                actions: [
+                  for (var i = 0; i < action.popupMenuItems!.length; i++)
+                    if (action.popupMenuItems![i] is CNPopupMenuItem)
+                      CupertinoActionSheetAction(
+                        onPressed: () => Navigator.of(ctx).pop(i),
+                        child: Text(
+                          (action.popupMenuItems![i] as CNPopupMenuItem).label,
+                        ),
+                      )
+                    else
+                      const SizedBox(height: 8),
+                ],
+                cancelButton: CupertinoActionSheetAction(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  isDefaultAction: true,
+                  child: const Text('Cancel'),
+                ),
+              );
+            },
+          );
+          if (selected != null) action.onPopupMenuSelected?.call(selected);
+        },
+        child: action.icon != null 
+            ? CNIcon(symbol: action.icon!, size: action.iconSize)
+            : Text(action.label ?? ''),
+      );
+    } else {
+      // Regular action button
+      return CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: action.onPressed,
+        child: action.icon != null 
+            ? CNIcon(symbol: action.icon!, size: action.iconSize)
+            : Text(action.label ?? ''),
+      );
+    }
   }
 }
 

@@ -6,6 +6,8 @@ import 'demos/segmented_control.dart';
 import 'demos/tab_bar.dart';
 import 'demos/icon.dart';
 import 'demos/popup_menu_button.dart';
+import 'demos/popup_menu_demo.dart';
+import 'demos/popup_menu_styles_demo.dart';
 import 'demos/button.dart';
 import 'demos/navigation_bar.dart';
 import 'demos/navigation_bar_scrollable.dart';
@@ -194,6 +196,34 @@ class HomePage extends StatelessWidget {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
                       builder: (_) => const PopupMenuButtonDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Popup Menu Integration'),
+                leading: CNIcon(
+                  symbol: CNSymbol('list.bullet.rectangle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const PopupMenuDemo(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Popup Menu Styles'),
+                leading: CNIcon(
+                  symbol: CNSymbol('ellipsis.circle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const PopupMenuStylesDemo(),
                     ),
                   );
                 },

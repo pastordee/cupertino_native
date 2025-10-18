@@ -10,6 +10,9 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
   private var currentTitle: String = ""
   private var currentTint: UIColor? = nil
   private var isTransparent: Bool = false
+  private var leadingPopupMenus: [Any?] = []
+  private var middlePopupMenus: [Any?] = []
+  private var trailingPopupMenus: [Any?] = []
 
   init(frame: CGRect, viewId: Int64, args: Any?, messenger: FlutterBinaryMessenger) {
     self.channel = FlutterMethodChannel(name: "CupertinoNativeNavigationBar_\(viewId)", binaryMessenger: messenger)
@@ -64,6 +67,9 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       trailingLabelSizes = (dict["trailingLabelSizes"] as? [Double]) ?? []
       trailingIconSizes = (dict["trailingIconSizes"] as? [Double]) ?? []
       trailingSpacers = (dict["trailingSpacers"] as? [String]) ?? []
+      leadingPopupMenus = (dict["leadingPopupMenus"] as? [Any?]) ?? []
+      middlePopupMenus = (dict["middlePopupMenus"] as? [Any?]) ?? []
+      trailingPopupMenus = (dict["trailingPopupMenus"] as? [Any?]) ?? []
       pillHeight = dict["pillHeight"] as? Double
       if let v = dict["largeTitle"] as? NSNumber { largeTitle = v.boolValue }
       if let v = dict["transparent"] as? NSNumber { transparent = v.boolValue }
@@ -161,7 +167,9 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             tint: tint,
             isDark: isDark,
             target: self,
-            action: #selector(leadingTapped(_:))
+            action: #selector(leadingTapped(_:)),
+            popupMenus: leadingPopupMenus,
+            location: "leading"
           )
           
           // Set tags for all buttons in the group
@@ -256,7 +264,9 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             tint: tint,
             isDark: isDark,
             target: self,
-            action: #selector(middleTapped(_:))
+            action: #selector(middleTapped(_:)),
+            popupMenus: middlePopupMenus,
+            location: "middle"
           )
           
           // Set tags for all buttons in the group
@@ -423,7 +433,9 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             tint: tint,
             isDark: isDark,
             target: self,
-            action: #selector(trailingTapped(_:))
+            action: #selector(trailingTapped(_:)),
+            popupMenus: trailingPopupMenus,
+            location: "trailing"
           )
           
           // Set tags for all buttons in the group
@@ -615,15 +627,24 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
   }
 
   @objc private func leadingTapped(_ sender: UIButton) {
-    channel.invokeMethod("leadingTapped", arguments: ["index": sender.tag])
+    let index = sender.tag
+    
+    // Only handle regular button taps - popup menus are handled natively
+    channel.invokeMethod("leadingTapped", arguments: ["index": index])
   }
 
   @objc private func middleTapped(_ sender: UIButton) {
-    channel.invokeMethod("middleTapped", arguments: ["index": sender.tag - 1000])
+    let index = sender.tag - 1000
+    
+    // Only handle regular button taps - popup menus are handled natively
+    channel.invokeMethod("middleTapped", arguments: ["index": index])
   }
 
   @objc private func trailingTapped(_ sender: UIButton) {
-    channel.invokeMethod("trailingTapped", arguments: ["index": sender.tag - 2000])
+    let index = sender.tag - 2000
+    
+    // Only handle regular button taps - popup menus are handled natively
+    channel.invokeMethod("trailingTapped", arguments: ["index": index])
   }
   
   @objc private func titleTapped() {
@@ -646,6 +667,41 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     })
   }
   
+  private func setupButtonMenu(button: UIButton, menuItems: [[String: Any]], actionIndex: Int, location: String) {
+    if #available(iOS 14.0, *) {
+      var menuActions: [UIAction] = []
+      
+      for (menuIndex, item) in menuItems.enumerated() {
+        let type = item["type"] as? String ?? "item"
+        
+        if type == "item" {
+          let label = item["label"] as? String ?? ""
+          let iconName = item["icon"] as? String ?? ""
+          let enabled = item["enabled"] as? Bool ?? true
+          
+          let action = UIAction(
+            title: label,
+            image: !iconName.isEmpty ? UIImage(systemName: iconName) : nil,
+            state: .off
+          ) { [weak self] _ in
+            self?.channel.invokeMethod("popupMenuSelected", arguments: [
+              "location": location,
+              "actionIndex": actionIndex,
+              "menuIndex": menuIndex
+            ])
+          }
+          
+          action.attributes = enabled ? [] : [.disabled]
+          menuActions.append(action)
+        }
+      }
+      
+      let menu = UIMenu(title: "", children: menuActions)
+      button.menu = menu
+      button.showsMenuAsPrimaryAction = true
+    }
+  }
+  
   private func createButtonGroup(
     icons: [String],
     labels: [String],
@@ -656,7 +712,9 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     tint: UIColor?,
     isDark: Bool,
     target: Any?,
-    action: Selector
+    action: Selector,
+    popupMenus: [Any?] = [],
+    location: String = ""
   ) -> UIView {
     let count = max(icons.count, labels.count)
     if count == 0 { return UIView(frame: .zero) }
@@ -732,6 +790,13 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       
       if let tintColor = tint {
         button.tintColor = tintColor
+      }
+      
+      // Set up popup menu if available
+      if i < popupMenus.count, let menuItems = popupMenus[i] as? [[String: Any]], !menuItems.isEmpty {
+        if #available(iOS 14.0, *) {
+          setupButtonMenu(button: button, menuItems: menuItems, actionIndex: i, location: location)
+        }
       }
       
       // Ensure button has no background - only the pill blur view should show

@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../channel/params.dart';
 import '../style/sf_symbol.dart';
+import 'popup_menu_button.dart';
 import 'search_config.dart';
 import 'search_bar.dart';
 
@@ -29,30 +31,68 @@ class CNToolbarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
-  }) : _isFixedSpace = false,
-       _isFlexibleSpace = false;
+  }) : popupMenuItems = null,
+       onPopupMenuSelected = null,
+       _isFixedSpace = false,
+       _isFlexibleSpace = false,
+       _usePopupMenuButton = false;
+
+  /// Creates a toolbar action with a popup menu.
+  const CNToolbarAction.popupMenu({
+    this.icon,
+    this.label,
+    required this.popupMenuItems,
+    required this.onPopupMenuSelected,
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  }) : onPressed = null,
+       _isFixedSpace = false,
+       _isFlexibleSpace = false,
+       _usePopupMenuButton = false;
+
+  /// Creates a toolbar action with a CNPopupMenuButton.
+  /// This provides a more native-looking popup menu button with built-in styling.
+  const CNToolbarAction.popupMenuButton({
+    this.icon,
+    this.label,
+    required this.popupMenuItems,
+    required this.onPopupMenuSelected,
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  }) : onPressed = null,
+       _isFixedSpace = false,
+       _isFlexibleSpace = false,
+       _usePopupMenuButton = true;
 
   /// Creates a fixed space item with specific width.
   const CNToolbarAction.fixedSpace(double width)
     : icon = null,
       label = null,
       onPressed = null,
+      popupMenuItems = null,
+      onPopupMenuSelected = null,
       padding = width,
       labelSize = null,
       iconSize = null,
       _isFixedSpace = true,
-      _isFlexibleSpace = false;
+      _isFlexibleSpace = false,
+      _usePopupMenuButton = false;
 
   /// Creates a flexible space that expands to fill available space.
   const CNToolbarAction.flexibleSpace()
     : icon = null,
       label = null,
       onPressed = null,
+      popupMenuItems = null,
+      onPopupMenuSelected = null,
       padding = null,
       labelSize = null,
       iconSize = null,
       _isFixedSpace = false,
-      _isFlexibleSpace = true;
+      _isFlexibleSpace = true,
+      _usePopupMenuButton = false;
 
   /// SF Symbol icon for the action.
   final CNSymbol? icon;
@@ -72,6 +112,14 @@ class CNToolbarAction {
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
 
+  /// Popup menu items to display when the action is pressed.
+  /// If provided, this action will show a popup menu instead of calling onPressed.
+  final List<CNPopupMenuEntry>? popupMenuItems;
+
+  /// Called when a popup menu item is selected.
+  /// The index corresponds to the position in the popupMenuItems list.
+  final ValueChanged<int>? onPopupMenuSelected;
+
   /// Custom padding for this action. If null, uses default platform padding.
   /// Specified in logical pixels. For fixed space, this is the width of the space.
   final double? padding;
@@ -82,6 +130,9 @@ class CNToolbarAction {
   /// Internal flag to indicate this is a flexible space item.
   final bool _isFlexibleSpace;
 
+  /// Internal flag to indicate this uses CNPopupMenuButton.
+  final bool _usePopupMenuButton;
+
   /// Returns true if this is a spacer (fixed or flexible).
   bool get isSpacer => _isFixedSpace || _isFlexibleSpace;
 
@@ -90,6 +141,12 @@ class CNToolbarAction {
 
   /// Returns true if this is a flexible space item.
   bool get isFlexibleSpace => _isFlexibleSpace;
+
+  /// Returns true if this action has a popup menu.
+  bool get hasPopupMenu => popupMenuItems != null && popupMenuItems!.isNotEmpty;
+
+  /// Returns true if this action uses CNPopupMenuButton.
+  bool get usePopupMenuButton => _usePopupMenuButton;
 }
 
 /// A Cupertino-native toolbar with liquid glass translucent effect.
@@ -324,6 +381,70 @@ class _CNToolbarState extends State<CNToolbar> {
             .toList() ??
         [];
 
+    // Collect popup menu data for native implementation  
+    final leadingPopupMenus = widget.leading?.map((action) {
+      if (action.hasPopupMenu) {
+        return action.popupMenuItems!.map((item) {
+          if (item is CNPopupMenuItem) {
+            return {
+              'type': 'item',
+              'label': item.label,
+              'icon': item.icon?.name ?? '',
+              'enabled': item.enabled,
+            };
+          } else if (item is CNPopupMenuDivider) {
+            return {
+              'type': 'divider',
+            };
+          }
+          return null;
+        }).where((item) => item != null).toList();
+      }
+      return null;
+    }).toList() ?? [];
+
+    final middlePopupMenus = widget.middle?.map((action) {
+      if (action.hasPopupMenu) {
+        return action.popupMenuItems!.map((item) {
+          if (item is CNPopupMenuItem) {
+            return {
+              'type': 'item',
+              'label': item.label,
+              'icon': item.icon?.name ?? '',
+              'enabled': item.enabled,
+            };
+          } else if (item is CNPopupMenuDivider) {
+            return {
+              'type': 'divider',
+            };
+          }
+          return null;
+        }).where((item) => item != null).toList();
+      }
+      return null;
+    }).toList() ?? [];
+
+    final trailingPopupMenus = widget.trailing?.map((action) {
+      if (action.hasPopupMenu) {
+        return action.popupMenuItems!.map((item) {
+          if (item is CNPopupMenuItem) {
+            return {
+              'type': 'item',
+              'label': item.label,
+              'icon': item.icon?.name ?? '',
+              'enabled': item.enabled,
+            };
+          } else if (item is CNPopupMenuDivider) {
+            return {
+              'type': 'divider',
+            };
+          }
+          return null;
+        }).where((item) => item != null).toList();
+      }
+      return null;
+    }).toList() ?? [];
+
     final creationParams = <String, dynamic>{
       'title': '',
       'leadingIcons': leadingIcons,
@@ -345,6 +466,9 @@ class _CNToolbarState extends State<CNToolbar> {
       'trailingLabelSizes': trailingLabelSizes,
       'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
+      'leadingPopupMenus': leadingPopupMenus,
+      'middlePopupMenus': middlePopupMenus, 
+      'trailingPopupMenus': trailingPopupMenus,
       'transparent': widget.transparent,
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),
@@ -388,7 +512,12 @@ class _CNToolbarState extends State<CNToolbar> {
       if (index >= 0 &&
           widget.leading != null &&
           index < widget.leading!.length) {
-        widget.leading![index].onPressed?.call();
+        final action = widget.leading![index];
+        // For actions without popup menus, call onPressed directly
+        // Actions with popup menus are handled natively
+        if (!action.hasPopupMenu) {
+          action.onPressed?.call();
+        }
       }
     } else if (call.method == 'middleTapped') {
       final args = call.arguments as Map?;
@@ -396,7 +525,12 @@ class _CNToolbarState extends State<CNToolbar> {
       if (index >= 0 &&
           widget.middle != null &&
           index < widget.middle!.length) {
-        widget.middle![index].onPressed?.call();
+        final action = widget.middle![index];
+        // For actions without popup menus, call onPressed directly
+        // Actions with popup menus are handled natively
+        if (!action.hasPopupMenu) {
+          action.onPressed?.call();
+        }
       }
     } else if (call.method == 'trailingTapped') {
       final args = call.arguments as Map?;
@@ -404,7 +538,37 @@ class _CNToolbarState extends State<CNToolbar> {
       if (index >= 0 &&
           widget.trailing != null &&
           index < widget.trailing!.length) {
-        widget.trailing![index].onPressed?.call();
+        final action = widget.trailing![index];
+        // For actions without popup menus, call onPressed directly
+        // Actions with popup menus are handled natively
+        if (!action.hasPopupMenu) {
+          action.onPressed?.call();
+        }
+      }
+    } else if (call.method == 'popupMenuSelected') {
+      final args = call.arguments as Map?;
+      final location = args?['location'] as String?;
+      final actionIndex = (args?['actionIndex'] as num?)?.toInt() ?? 0;
+      final menuIndex = (args?['menuIndex'] as num?)?.toInt() ?? 0;
+      
+      if (location == 'leading' &&
+          actionIndex >= 0 &&
+          widget.leading != null &&
+          actionIndex < widget.leading!.length) {
+        final action = widget.leading![actionIndex];
+        action.onPopupMenuSelected?.call(menuIndex);
+      } else if (location == 'middle' &&
+          actionIndex >= 0 &&
+          widget.middle != null &&
+          actionIndex < widget.middle!.length) {
+        final action = widget.middle![actionIndex];
+        action.onPopupMenuSelected?.call(menuIndex);
+      } else if (location == 'trailing' &&
+          actionIndex >= 0 &&
+          widget.trailing != null &&
+          actionIndex < widget.trailing!.length) {
+        final action = widget.trailing![actionIndex];
+        action.onPopupMenuSelected?.call(menuIndex);
       }
     }
     return null;
