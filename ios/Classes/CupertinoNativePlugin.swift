@@ -32,6 +32,9 @@ public class CupertinoNativePlugin: NSObject, FlutterPlugin {
     let popupMenuFactory = CupertinoPopupMenuButtonViewFactory(messenger: registrar.messenger())
     registrar.register(popupMenuFactory, withId: "CupertinoNativePopupMenuButton")
 
+    let pullDownButtonFactory = CupertinoPullDownButtonViewFactory(messenger: registrar.messenger())
+    registrar.register(pullDownButtonFactory, withId: "CupertinoNativePullDownButton")
+
     let buttonFactory = CupertinoButtonViewFactory(messenger: registrar.messenger())
     registrar.register(buttonFactory, withId: "CupertinoNativeButton")
 

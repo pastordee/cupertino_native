@@ -8,6 +8,8 @@ import 'demos/icon.dart';
 import 'demos/popup_menu_button.dart';
 import 'demos/popup_menu_demo.dart';
 import 'demos/popup_menu_styles_demo.dart';
+import 'demos/pull_down_button.dart';
+import 'demos/pull_down_inline_actions_demo.dart';
 import 'demos/button.dart';
 import 'demos/navigation_bar.dart';
 import 'demos/navigation_bar_scrollable.dart';
@@ -19,6 +21,7 @@ import 'demos/custom_sheet_demo.dart';
 import 'demos/sheet_custom_content.dart';
 import 'demos/sheet_uikit_view.dart';
 import 'demos/sheet_custom_styling.dart';
+import 'demos/notes_format_sheet_demo.dart';
 import 'demos/simple_search_demo.dart';
 import 'demos/tabbar_only_demo.dart';
 
@@ -229,6 +232,34 @@ class HomePage extends StatelessWidget {
                 },
               ),
               CupertinoListTile(
+                title: Text('Pull-Down Button'),
+                leading: CNIcon(
+                  symbol: CNSymbol('chevron.down.circle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const PullDownButtonDemo(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Pull-Down Inline Actions'),
+                leading: CNIcon(
+                  symbol: CNSymbol('square.grid.3x1.below.line.grid.1x2', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const PullDownInlineActionsDemo(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
                 title: Text('Button'),
                 leading: CNIcon(
                   symbol: CNSymbol('hand.tap', color: accentColor),
@@ -430,6 +461,24 @@ class HomePage extends StatelessWidget {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
                       builder: (_) => const SheetUiKitViewDemoPage(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Notes Format Sheet'),
+                subtitle: Text('Non-modal sheet with inline actions'),
+                leading: CNIcon(
+                  symbol: CNSymbol(
+                    'doc.text.fill',
+                    color: CupertinoColors.systemYellow,
+                  ),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const NotesFormatSheetDemo(),
                     ),
                   );
                 },

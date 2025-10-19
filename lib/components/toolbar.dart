@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../channel/params.dart';
 import '../style/sf_symbol.dart';
 import 'popup_menu_button.dart';
+import 'pull_down_button.dart';
 import 'search_config.dart';
 import 'search_bar.dart';
 
@@ -35,7 +36,8 @@ class CNToolbarAction {
        onPopupMenuSelected = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
-       _usePopupMenuButton = false;
+       _usePopupMenuButton = false,
+       _usePullDownButton = false;
 
   /// Creates a toolbar action with a popup menu.
   const CNToolbarAction.popupMenu({
@@ -49,7 +51,8 @@ class CNToolbarAction {
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
-       _usePopupMenuButton = false;
+       _usePopupMenuButton = false,
+       _usePullDownButton = false;
 
   /// Creates a toolbar action with a CNPopupMenuButton.
   /// This provides a more native-looking popup menu button with built-in styling.
@@ -64,7 +67,24 @@ class CNToolbarAction {
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
-       _usePopupMenuButton = true;
+       _usePopupMenuButton = true,
+       _usePullDownButton = false;
+
+  /// Creates a toolbar action with a CNPullDownButton.
+  /// This provides Apple Design Guidelines compliant pull-down menus that appear below the button.
+  const CNToolbarAction.pullDownButton({
+    this.icon,
+    this.label,
+    required this.popupMenuItems,
+    required this.onPopupMenuSelected,
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  }) : onPressed = null,
+       _isFixedSpace = false,
+       _isFlexibleSpace = false,
+       _usePopupMenuButton = false,
+       _usePullDownButton = true;
 
   /// Creates a fixed space item with specific width.
   const CNToolbarAction.fixedSpace(double width)
@@ -78,7 +98,8 @@ class CNToolbarAction {
       iconSize = null,
       _isFixedSpace = true,
       _isFlexibleSpace = false,
-      _usePopupMenuButton = false;
+      _usePopupMenuButton = false,
+      _usePullDownButton = false;
 
   /// Creates a flexible space that expands to fill available space.
   const CNToolbarAction.flexibleSpace()
@@ -92,7 +113,8 @@ class CNToolbarAction {
       iconSize = null,
       _isFixedSpace = false,
       _isFlexibleSpace = true,
-      _usePopupMenuButton = false;
+      _usePopupMenuButton = false,
+      _usePullDownButton = false;
 
   /// SF Symbol icon for the action.
   final CNSymbol? icon;
@@ -133,6 +155,9 @@ class CNToolbarAction {
   /// Internal flag to indicate this uses CNPopupMenuButton.
   final bool _usePopupMenuButton;
 
+  /// Internal flag to indicate this uses CNPullDownButton.
+  final bool _usePullDownButton;
+
   /// Returns true if this is a spacer (fixed or flexible).
   bool get isSpacer => _isFixedSpace || _isFlexibleSpace;
 
@@ -147,6 +172,9 @@ class CNToolbarAction {
 
   /// Returns true if this action uses CNPopupMenuButton.
   bool get usePopupMenuButton => _usePopupMenuButton;
+
+  /// Returns true if this action uses CNPullDownButton.
+  bool get usePullDownButton => _usePullDownButton;
 }
 
 /// A Cupertino-native toolbar with liquid glass translucent effect.
@@ -445,6 +473,17 @@ class _CNToolbarState extends State<CNToolbar> {
       return null;
     }).toList() ?? [];
 
+    // Collect popup menu type flags
+    final leadingPopupMenuTypes = widget.leading?.map((action) => 
+      action.usePopupMenuButton ? 'popupMenuButton' : 
+      (action.usePullDownButton ? 'pullDownButton' : 'traditional')).toList() ?? [];
+    final middlePopupMenuTypes = widget.middle?.map((action) => 
+      action.usePopupMenuButton ? 'popupMenuButton' : 
+      (action.usePullDownButton ? 'pullDownButton' : 'traditional')).toList() ?? [];
+    final trailingPopupMenuTypes = widget.trailing?.map((action) => 
+      action.usePopupMenuButton ? 'popupMenuButton' : 
+      (action.usePullDownButton ? 'pullDownButton' : 'traditional')).toList() ?? [];
+
     final creationParams = <String, dynamic>{
       'title': '',
       'leadingIcons': leadingIcons,
@@ -469,6 +508,9 @@ class _CNToolbarState extends State<CNToolbar> {
       'leadingPopupMenus': leadingPopupMenus,
       'middlePopupMenus': middlePopupMenus, 
       'trailingPopupMenus': trailingPopupMenus,
+      'leadingPopupMenuTypes': leadingPopupMenuTypes,
+      'middlePopupMenuTypes': middlePopupMenuTypes,
+      'trailingPopupMenuTypes': trailingPopupMenuTypes,
       'transparent': widget.transparent,
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),

@@ -29,18 +29,162 @@ class CNSheetItem {
   final String? title;
   final String? icon;
   final bool dismissOnTap;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Color? iconColor;
+  final double? height;
+  final double? fontSize;
+  final double? iconSize;
+  final FontWeight? fontWeight;
 
   /// Creates a simple sheet item with title and optional icon.
   /// This will be rendered natively using UISheetPresentationController.
-  const CNSheetItem({required this.title, this.icon, this.dismissOnTap = true});
+  ///
+  /// [title] - The text to display
+  /// [icon] - Optional SF Symbol icon name
+  /// [dismissOnTap] - Whether tapping this item dismisses the sheet
+  /// [backgroundColor] - Custom background color for this item
+  /// [textColor] - Custom text color for this item
+  /// [iconColor] - Custom icon/tint color for this item
+  /// [height] - Custom height for this item (default: 50)
+  /// [fontSize] - Font size for the title text (default: 17)
+  /// [iconSize] - Size of the SF Symbol icon (default: 22)
+  /// [fontWeight] - Font weight for the title text (default: regular)
+  const CNSheetItem({
+    required this.title,
+    this.icon,
+    this.dismissOnTap = true,
+    this.backgroundColor,
+    this.textColor,
+    this.iconColor,
+    this.height,
+    this.fontSize,
+    this.iconSize,
+    this.fontWeight,
+  });
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       if (title != null) 'title': title,
       if (icon != null) 'icon': icon,
       'dismissOnTap': dismissOnTap,
     };
+    
+    // Add styling properties if provided
+    if (backgroundColor != null) map['backgroundColor'] = backgroundColor!.value;
+    if (textColor != null) map['textColor'] = textColor!.value;
+    if (iconColor != null) map['iconColor'] = iconColor!.value;
+    if (height != null) map['height'] = height;
+    if (fontSize != null) map['fontSize'] = fontSize;
+    if (iconSize != null) map['iconSize'] = iconSize;
+    if (fontWeight != null) {
+      // Map FontWeight to Swift weight value
+      final weightMap = {
+        FontWeight.w100: 100,
+        FontWeight.w200: 200,
+        FontWeight.w300: 300,
+        FontWeight.w400: 400,
+        FontWeight.w500: 500,
+        FontWeight.w600: 600,
+        FontWeight.w700: 700,
+        FontWeight.w800: 800,
+        FontWeight.w900: 900,
+      };
+      map['fontWeight'] = weightMap[fontWeight] ?? 400;
+    }
+    
+    return map;
   }
+}
+
+/// A horizontal row of vertical-style items displayed side-by-side.
+///
+/// Use this to show 2-3 items in a row (e.g., "Cancel" and "Delete" buttons
+/// side-by-side). Each item maintains the vertical button style but is placed
+/// horizontally next to each other with equal widths.
+class CNSheetItemRow {
+  final List<CNSheetItem> items;
+  final double? spacing;
+  final double? height;
+
+  /// Creates a row of vertical items displayed side-by-side.
+  ///
+  /// Best used with 2-3 items. Too many items will make buttons too narrow.
+  /// 
+  /// [items] - List of items to display side-by-side
+  /// [spacing] - Spacing between items in the row (default: 8)
+  /// [height] - Custom height for the entire row (default: 50)
+  const CNSheetItemRow({
+    required this.items,
+    this.spacing,
+    this.height,
+  });
+}
+
+/// A horizontal row of inline action buttons in a native sheet.
+///
+/// These appear as icon buttons arranged horizontally, similar to the formatting
+/// toolbar in iOS Notes app (Bold, Italic, Underline, etc.).
+class CNSheetInlineActions {
+  final List<CNSheetInlineAction> actions;
+  final double? spacing;
+  final double? horizontalPadding;
+  final double? verticalPadding;
+  final double? height;
+
+  /// Creates a row of inline action buttons.
+  ///
+  /// [actions] - List of inline action buttons in this row
+  /// [spacing] - Spacing between buttons (default: 12)
+  /// [horizontalPadding] - Left and right padding for the entire row (default: 16)
+  /// [verticalPadding] - Top and bottom padding for the row container (default: 0)
+  /// [height] - Height of the row (default: 72)
+  const CNSheetInlineActions({
+    required this.actions,
+    this.spacing,
+    this.horizontalPadding,
+    this.verticalPadding,
+    this.height,
+  });
+}
+
+/// An individual inline action button for sheets.
+class CNSheetInlineAction {
+  final String label;
+  final String icon;
+  final bool enabled;
+  final bool isToggled;
+  final Color? backgroundColor;
+  final double? width;
+  final double? iconSize;
+  final double? labelSize;
+  final double? cornerRadius;
+  final double? iconLabelSpacing;
+
+  /// Creates an inline action button.
+  ///
+  /// [label] - Label displayed below the icon
+  /// [icon] - SF Symbol icon name
+  /// [enabled] - Whether the action can be tapped
+  /// [isToggled] - Whether the action appears in selected/highlighted state
+  /// [backgroundColor] - Optional custom background color for this action button
+  /// [width] - Custom width for this button (default: 70)
+  /// [iconSize] - Size of the SF Symbol icon (default: 24)
+  /// [labelSize] - Font size for the label text (default: 13)
+  /// [cornerRadius] - Corner radius for the button (default: 12)
+  /// [iconLabelSpacing] - Spacing between icon and label (default: 6)
+  const CNSheetInlineAction({
+    required this.label,
+    required this.icon,
+    this.enabled = true,
+    this.isToggled = false,
+    this.backgroundColor,
+    this.width,
+    this.iconSize,
+    this.labelSize,
+    this.cornerRadius,
+    this.iconLabelSpacing,
+  });
 }
 
 /// A native iOS/macOS sheet presentation using UIKit rendering.
@@ -213,6 +357,10 @@ class CNNativeSheet {
   /// [headerTitleSize] - Font size for the title (default: 20)
   /// [headerTitleWeight] - Font weight for the title (default: semibold/600)
   /// [headerTitleColor] - Color for the title (default: label color)
+  /// [headerTitleAlignment] - Alignment of title: 'left', 'center' (default: 'left')
+  /// [subtitle] - Optional subtitle/subheading displayed below the title
+  /// [subtitleSize] - Font size for the subtitle (default: 13)
+  /// [subtitleColor] - Color for the subtitle (default: secondary label)
   /// [headerHeight] - Height of the header bar (default: 56)
   /// [headerBackgroundColor] - Background color of the header (default: system background)
   /// [showHeaderDivider] - Whether to show divider below header (default: true)
@@ -224,11 +372,15 @@ class CNNativeSheet {
   /// [itemBackgroundColor] - Background color for sheet item buttons (default: clear)
   /// [itemTextColor] - Text color for sheet item buttons (default: system label)
   /// [itemTintColor] - Tint color for icons in sheet item buttons (default: system tint)
+  /// [onInlineActionSelected] - Callback invoked when an inline action is tapped, receives row and action indices
+  /// [onItemSelected] - Callback invoked when a vertical item is tapped, receives the item index
   static Future<int?> showWithCustomHeader({
     required BuildContext context,
     required String title,
     String? message,
     List<CNSheetItem> items = const [],
+    List<CNSheetItemRow> itemRows = const [],
+    List<CNSheetInlineActions> inlineActions = const [],
     List<CNSheetDetent> detents = const [CNSheetDetent.large],
     bool prefersGrabberVisible = true,
     bool isModal = true,
@@ -239,6 +391,10 @@ class CNNativeSheet {
     double? headerTitleSize,
     FontWeight? headerTitleWeight,
     Color? headerTitleColor,
+    String headerTitleAlignment = 'left',
+    String? subtitle,
+    double? subtitleSize,
+    Color? subtitleColor,
     double? headerHeight,
     Color? headerBackgroundColor,
     bool showHeaderDivider = true,
@@ -251,12 +407,78 @@ class CNNativeSheet {
     Color? itemBackgroundColor,
     Color? itemTextColor,
     Color? itemTintColor,
+    // Callbacks
+    void Function(int rowIndex, int actionIndex)? onInlineActionSelected,
+    void Function(int index)? onItemSelected,
   }) async {
     try {
+      // Serialize inline actions
+      final inlineActionsList = <Map<String, dynamic>>[];
+      for (final actionGroup in inlineActions) {
+        final actionMaps = actionGroup.actions.map((action) {
+          final map = <String, dynamic>{
+            'label': action.label,
+            'icon': action.icon,
+            'enabled': action.enabled,
+            'isToggled': action.isToggled,
+          };
+          // Add backgroundColor if provided (convert to ARGB int)
+          if (action.backgroundColor != null) {
+            map['backgroundColor'] = action.backgroundColor!.value;
+          }
+          // Add styling properties if provided
+          if (action.width != null) map['width'] = action.width;
+          if (action.iconSize != null) map['iconSize'] = action.iconSize;
+          if (action.labelSize != null) map['labelSize'] = action.labelSize;
+          if (action.cornerRadius != null) map['cornerRadius'] = action.cornerRadius;
+          if (action.iconLabelSpacing != null) map['iconLabelSpacing'] = action.iconLabelSpacing;
+          
+          return map;
+        }).toList();
+        
+        // Add row-level styling properties
+        final rowMap = <String, dynamic>{'actions': actionMaps};
+        if (actionGroup.spacing != null) rowMap['spacing'] = actionGroup.spacing;
+        if (actionGroup.horizontalPadding != null) rowMap['horizontalPadding'] = actionGroup.horizontalPadding;
+        if (actionGroup.verticalPadding != null) rowMap['verticalPadding'] = actionGroup.verticalPadding;
+        if (actionGroup.height != null) rowMap['height'] = actionGroup.height;
+        
+        inlineActionsList.add(rowMap);
+      }
+      
+      // Set up callback handler if provided
+      if (onInlineActionSelected != null || onItemSelected != null) {
+        _customChannel.setMethodCallHandler((call) async {
+          if (call.method == 'onInlineActionSelected' && onInlineActionSelected != null) {
+            final rowIndex = call.arguments['rowIndex'] as int;
+            final actionIndex = call.arguments['actionIndex'] as int;
+            onInlineActionSelected(rowIndex, actionIndex);
+          } else if (call.method == 'onItemSelected' && onItemSelected != null) {
+            final index = call.arguments['index'] as int;
+            onItemSelected(index);
+          }
+        });
+      }
+      
+      // Serialize item rows
+      final itemRowsList = itemRows.map((row) {
+        final rowMap = <String, dynamic>{
+          'items': row.items.map((item) => item.toMap()).toList(),
+        };
+        
+        // Add row-level styling properties
+        if (row.spacing != null) rowMap['spacing'] = row.spacing;
+        if (row.height != null) rowMap['height'] = row.height;
+        
+        return rowMap;
+      }).toList();
+      
       final result = await _customChannel.invokeMethod('showSheet', {
         'title': title,
         'message': message,
         'items': items.map((item) => item.toMap()).toList(),
+        'itemRows': itemRowsList,
+        'inlineActions': inlineActionsList,
         'detents': detents.map((d) => d.toMap()).toList(),
         'prefersGrabberVisible': prefersGrabberVisible,
         'isModal': isModal,
@@ -271,6 +493,10 @@ class CNNativeSheet {
           'headerTitleWeight': _fontWeightToString(headerTitleWeight),
         if (headerTitleColor != null)
           'headerTitleColor': headerTitleColor.value,
+        'headerTitleAlignment': headerTitleAlignment,
+        if (subtitle != null) 'subtitle': subtitle,
+        if (subtitleSize != null) 'subtitleSize': subtitleSize,
+        if (subtitleColor != null) 'subtitleColor': subtitleColor.value,
         if (headerHeight != null) 'headerHeight': headerHeight,
         if (headerBackgroundColor != null)
           'headerBackgroundColor': headerBackgroundColor.value,

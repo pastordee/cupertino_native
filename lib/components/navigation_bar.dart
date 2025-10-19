@@ -7,6 +7,7 @@ import '../channel/params.dart';
 import '../style/sf_symbol.dart';
 import 'icon.dart';
 import 'popup_menu_button.dart';
+import 'pull_down_button.dart';
 import 'search_config.dart';
 import 'search_bar.dart';
 
@@ -24,7 +25,8 @@ class CNNavigationBarAction {
         onPopupMenuSelected = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
-        _usePopupMenuButton = false;
+        _usePopupMenuButton = false,
+        _usePullDownButton = false;
 
   /// Creates a navigation bar action with a popup menu.
   const CNNavigationBarAction.popupMenu({
@@ -38,7 +40,8 @@ class CNNavigationBarAction {
   })  : onPressed = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
-        _usePopupMenuButton = false;
+        _usePopupMenuButton = false,
+        _usePullDownButton = false;
 
   /// Creates a navigation bar action with a CNPopupMenuButton.
   /// This provides a more native-looking popup menu button with built-in styling.
@@ -53,7 +56,24 @@ class CNNavigationBarAction {
   })  : onPressed = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
-        _usePopupMenuButton = true;
+        _usePopupMenuButton = true,
+        _usePullDownButton = false;
+
+  /// Creates a navigation bar action with a CNPullDownButton.
+  /// This provides a native pull-down button that shows a menu below the button.
+  const CNNavigationBarAction.pullDownButton({
+    this.icon,
+    this.label,
+    required this.popupMenuItems,
+    required this.onPopupMenuSelected,
+    this.padding,
+    this.labelSize,
+    this.iconSize,
+  })  : onPressed = null,
+        _isFixedSpace = false,
+        _isFlexibleSpace = false,
+        _usePopupMenuButton = false,
+        _usePullDownButton = true;
 
   /// Creates a fixed space item with specific width.
   const CNNavigationBarAction.fixedSpace(double width)
@@ -67,7 +87,8 @@ class CNNavigationBarAction {
         padding = width,
         _isFixedSpace = true,
         _isFlexibleSpace = false,
-        _usePopupMenuButton = false;
+        _usePopupMenuButton = false,
+        _usePullDownButton = false;
 
   /// Creates a flexible space that expands to fill available space.
   const CNNavigationBarAction.flexibleSpace()
@@ -81,7 +102,8 @@ class CNNavigationBarAction {
         padding = null,
         _isFixedSpace = false,
         _isFlexibleSpace = true,
-        _usePopupMenuButton = false;
+        _usePopupMenuButton = false,
+        _usePullDownButton = false;
 
   /// SF Symbol icon for the action.
   final CNSymbol? icon;
@@ -122,6 +144,9 @@ class CNNavigationBarAction {
   /// Internal flag to indicate this uses CNPopupMenuButton.
   final bool _usePopupMenuButton;
 
+  /// Internal flag to indicate this uses CNPullDownButton.
+  final bool _usePullDownButton;
+
   /// Returns true if this is a spacer (fixed or flexible).
   bool get isSpacer => _isFixedSpace || _isFlexibleSpace;
 
@@ -136,6 +161,9 @@ class CNNavigationBarAction {
 
   /// Returns true if this action uses CNPopupMenuButton.
   bool get usePopupMenuButton => _usePopupMenuButton;
+
+  /// Returns true if this action uses CNPullDownButton.
+  bool get usePullDownButton => _usePullDownButton;
 }
 
 /// A Cupertino-native navigation bar with liquid glass translucent effect.
@@ -575,6 +603,36 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         return CNPopupMenuButton(
           buttonLabel: action.label ?? '',
           items: action.popupMenuItems!,
+          onSelected: action.onPopupMenuSelected!,
+          height: 32.0,
+        );
+      }
+    } else if (action.hasPopupMenu && action.usePullDownButton) {
+      // Use CNPullDownButton for native pull-down menu
+      final pullDownItems = action.popupMenuItems!.map((item) {
+        if (item is CNPopupMenuItem) {
+          return CNPullDownMenuItem(
+            label: item.label,
+            icon: item.icon,
+            enabled: item.enabled,
+          );
+        } else if (item is CNPopupMenuDivider) {
+          return CNPullDownMenuDivider();
+        }
+        return CNPullDownMenuItem(label: '');
+      }).toList();
+
+      if (action.icon != null) {
+        return CNPullDownButton.icon(
+          buttonIcon: action.icon!,
+          items: pullDownItems,
+          onSelected: action.onPopupMenuSelected!,
+          size: action.iconSize ?? 44.0,
+        );
+      } else {
+        return CNPullDownButton(
+          buttonLabel: action.label ?? '',
+          items: pullDownItems,
           onSelected: action.onPopupMenuSelected!,
           height: 32.0,
         );

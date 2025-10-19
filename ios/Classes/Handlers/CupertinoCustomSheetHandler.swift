@@ -47,6 +47,7 @@ class CupertinoCustomSheetHandler: NSObject {
             if #available(iOS 15.0, *) {
                 // Create custom header sheet view controller
                 let sheetVC = CupertinoCustomSheetViewController()
+                sheetVC.channel = self.channel // Pass the channel for callbacks
                 
                 // Ensure the sheet matches the presenting controller's appearance
                 if #available(iOS 13.0, *) {
@@ -69,6 +70,14 @@ class CupertinoCustomSheetHandler: NSObject {
                 if let items = args["items"] as? [[String: Any]] {
                     sheetVC.items = items
                 }
+                if let itemRowsData = args["itemRows"] as? [[String: Any]] {
+                    // Keep the full row dictionaries with styling properties
+                    sheetVC.itemRows = itemRowsData
+                }
+                if let inlineActionsData = args["inlineActions"] as? [[String: Any]] {
+                    // Each element in inlineActionsData is a dictionary with "actions" key and optional styling properties
+                    sheetVC.inlineActions = inlineActionsData
+                }
                 sheetVC.isSheetModal = isModal
                 
                 // Apply custom header styling
@@ -80,6 +89,18 @@ class CupertinoCustomSheetHandler: NSObject {
                 }
                 if let colorValue = args["headerTitleColor"] as? Int {
                     sheetVC.headerTitleColor = Self.colorFromARGB(colorValue)
+                }
+                if let alignment = args["headerTitleAlignment"] as? String {
+                    sheetVC.headerTitleAlignment = alignment == "center" ? .center : .left
+                }
+                if let subtitleText = args["subtitle"] as? String {
+                    sheetVC.subtitle = subtitleText
+                }
+                if let size = args["subtitleSize"] as? CGFloat {
+                    sheetVC.subtitleSize = size
+                }
+                if let colorValue = args["subtitleColor"] as? Int {
+                    sheetVC.subtitleColor = Self.colorFromARGB(colorValue)
                 }
                 if let height = args["headerHeight"] as? CGFloat {
                     sheetVC.headerHeight = height
@@ -192,6 +213,9 @@ class CupertinoCustomSheetHandler: NSObject {
                             sheet.largestUndimmedDetentIdentifier = largestDetent
                             print("✅ Nonmodal sheet: largestUndimmedDetentIdentifier set to \(largestDetent)")
                         }
+                        
+                        // Additionally, ensure the sheet presentation doesn't block interaction
+                        sheet.prefersScrollingExpandsWhenScrolledToEdge = false
                     } else {
                         print("🔒 Modal sheet: background interaction disabled")
                     }
@@ -249,7 +273,7 @@ class CupertinoCustomSheetHandler: NSObject {
     }
     
     // Helper to convert ARGB int to UIColor
-    private static func colorFromARGB(_ argb: Int) -> UIColor {
+    static func colorFromARGB(_ argb: Int) -> UIColor {
         let alpha = CGFloat((argb >> 24) & 0xFF) / 255.0
         let red = CGFloat((argb >> 16) & 0xFF) / 255.0
         let green = CGFloat((argb >> 8) & 0xFF) / 255.0
@@ -265,14 +289,21 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
     var sheetTitle: String?
     var sheetMessage: String?
     var items: [[String: Any]] = []
+    var itemRows: [[String: Any]] = [] // Array of row dictionaries, each with "items" array and optional styling
+    var inlineActions: [[String: Any]] = [] // Array of action group dictionaries, each with "actions" array and styling properties
     var onDismiss: ((Int?) -> Void)?
     var isSheetModal: Bool = true
     var flutterViewController: FlutterViewController?
+    var channel: FlutterMethodChannel?
     
     // Header styling properties
     var headerTitleSize: CGFloat = 20
     var headerTitleWeight: UIFont.Weight = .semibold
     var headerTitleColor: UIColor?
+    var headerTitleAlignment: NSTextAlignment = .left // .left or .center
+    var subtitle: String?
+    var subtitleSize: CGFloat = 13
+    var subtitleColor: UIColor?
     var headerHeight: CGFloat = 56
     var headerBackgroundColor: UIColor?
     var showHeaderDivider: Bool = true
@@ -360,13 +391,34 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
     headerView.backgroundColor = headerBackgroundColor ?? .systemBackground
         view.addSubview(headerView)
         
+        // Title and subtitle stack
+        let titleStack = UIStackView()
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+        titleStack.axis = .vertical
+        titleStack.spacing = 2
+        titleStack.alignment = headerTitleAlignment == .center ? .center : .leading
+        
         // Title label
         let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = sheetTitle ?? "Sheet"
         titleLabel.font = .systemFont(ofSize: headerTitleSize, weight: headerTitleWeight)
         titleLabel.textColor = headerTitleColor ?? .label
-        headerView.addSubview(titleLabel)
+        titleLabel.textAlignment = headerTitleAlignment
+        titleStack.addArrangedSubview(titleLabel)
+        
+        // Subtitle label (if provided)
+        var subtitleLabel: UILabel?
+        if let subtitleText = subtitle {
+            let label = UILabel()
+            label.text = subtitleText
+            label.font = .systemFont(ofSize: subtitleSize)
+            label.textColor = subtitleColor ?? .secondaryLabel
+            label.textAlignment = headerTitleAlignment
+            titleStack.addArrangedSubview(label)
+            subtitleLabel = label
+        }
+        
+        headerView.addSubview(titleStack)
         
         // Close button
         let closeButton = UIButton(type: .system)
@@ -386,17 +438,34 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
         separator.isHidden = !showHeaderDivider
         headerView.addSubview(separator)
         
+        // Create title constraints based on alignment
+        var titleConstraints: [NSLayoutConstraint] = []
+        
+        if headerTitleAlignment == .center {
+            // Center alignment - title is centered horizontally
+            titleConstraints = [
+                titleStack.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+                titleStack.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+                titleStack.leadingAnchor.constraint(greaterThanOrEqualTo: headerView.leadingAnchor, constant: 56),
+                titleStack.trailingAnchor.constraint(lessThanOrEqualTo: headerView.trailingAnchor, constant: -56)
+            ]
+        } else {
+            // Left alignment - title is on the left side
+            let leadingConstant: CGFloat = closeButtonPosition == "leading" ? 56 : 16
+            titleConstraints = [
+                titleStack.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: leadingConstant),
+                titleStack.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+                titleStack.trailingAnchor.constraint(lessThanOrEqualTo: closeButton.leadingAnchor, constant: -8)
+            ]
+        }
+        
         NSLayoutConstraint.activate([
             // Header view constraints
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: headerHeight),
-            
-            // Title label constraints (position depends on closeButtonPosition)
-            titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: closeButtonPosition == "leading" ? 56 : 16),
-            titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            
+        ] + titleConstraints + [
             // Close button constraints (position depends on closeButtonPosition)
             closeButtonPosition == "leading" ?
                 closeButton.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16) :
@@ -417,6 +486,9 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.delegate = self as? UIScrollViewDelegate
         scrollView.backgroundColor = .clear
+        scrollView.alwaysBounceVertical = true  // Allow scrolling even when content is small
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.isScrollEnabled = true
         view.addSubview(scrollView)
         
         let contentStack = UIStackView()
@@ -436,40 +508,259 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
             contentStack.addArrangedSubview(messageLabel)
         }
         
+        // Add inline action rows (horizontal button groups)
+        for (rowIndex, actionGroup) in inlineActions.enumerated() {
+            // Extract row-level styling properties with proper type conversion
+            let spacing: CGFloat
+            if let spacingValue = actionGroup["spacing"] as? NSNumber {
+                spacing = CGFloat(spacingValue.doubleValue)
+            } else {
+                spacing = 12
+            }
+            
+            let horizontalPadding: CGFloat
+            if let paddingValue = actionGroup["horizontalPadding"] as? NSNumber {
+                horizontalPadding = CGFloat(paddingValue.doubleValue)
+            } else {
+                horizontalPadding = 16
+            }
+            
+            let verticalPadding: CGFloat
+            if let paddingValue = actionGroup["verticalPadding"] as? NSNumber {
+                verticalPadding = CGFloat(paddingValue.doubleValue)
+            } else {
+                verticalPadding = 0
+            }
+            
+            let rowHeight: CGFloat
+            if let heightValue = actionGroup["height"] as? NSNumber {
+                rowHeight = CGFloat(heightValue.doubleValue)
+            } else {
+                rowHeight = 72
+            }
+            
+            guard let actions = actionGroup["actions"] as? [[String: Any]] else { continue }
+            
+            // Create scroll view for horizontal scrolling
+            let scrollView = UIScrollView()
+            scrollView.translatesAutoresizingMaskIntoConstraints = false
+            scrollView.showsHorizontalScrollIndicator = false
+            scrollView.showsVerticalScrollIndicator = false
+            
+            let actionRow = UIStackView()
+            actionRow.axis = .horizontal
+            actionRow.distribution = .fill
+            actionRow.spacing = spacing
+            actionRow.translatesAutoresizingMaskIntoConstraints = false
+            
+            for (actionIndex, action) in actions.enumerated() {
+                let actionButton = createInlineActionButton(action: action, rowIndex: rowIndex, actionIndex: actionIndex)
+                actionRow.addArrangedSubview(actionButton)
+                
+                // Get custom width or use default
+                let buttonWidth: CGFloat
+                if let widthValue = action["width"] as? NSNumber {
+                    buttonWidth = CGFloat(widthValue.doubleValue)
+                } else {
+                    buttonWidth = 70
+                }
+                
+                NSLayoutConstraint.activate([
+                    actionButton.widthAnchor.constraint(equalToConstant: buttonWidth)
+                ])
+            }
+            
+            scrollView.addSubview(actionRow)
+            
+            // Wrap the scroll view in a container with padding
+            let container = UIView()
+            container.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(scrollView)
+            
+            NSLayoutConstraint.activate([
+                scrollView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: horizontalPadding),
+                scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -horizontalPadding),
+                scrollView.topAnchor.constraint(equalTo: container.topAnchor, constant: verticalPadding),
+                scrollView.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -verticalPadding),
+                scrollView.heightAnchor.constraint(equalToConstant: rowHeight),
+                
+                actionRow.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+                actionRow.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+                actionRow.topAnchor.constraint(equalTo: scrollView.topAnchor),
+                actionRow.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+                actionRow.heightAnchor.constraint(equalTo: scrollView.heightAnchor)
+            ])
+            
+            contentStack.addArrangedSubview(container)
+        }
+        
         // Add items (custom header sheet controller)
         for (index, item) in items.enumerated() {
             if let title = item["title"] as? String {
                 let button = UIButton(type: .system)
                 button.setTitle(title, for: .normal)
-                button.titleLabel?.font = .systemFont(ofSize: 17)
+                
+                // Get custom styling properties
+                let fontSize = (item["fontSize"] as? NSNumber)?.doubleValue ?? 17
+                let itemHeight = (item["height"] as? NSNumber)?.doubleValue ?? 50
+                let iconSize = (item["iconSize"] as? NSNumber)?.doubleValue ?? 22
+                
+                // Apply font weight if provided
+                var font: UIFont
+                if let fontWeightValue = item["fontWeight"] as? Int {
+                    let weight: UIFont.Weight = {
+                        switch fontWeightValue {
+                        case 100: return .ultraLight
+                        case 200: return .thin
+                        case 300: return .light
+                        case 400: return .regular
+                        case 500: return .medium
+                        case 600: return .semibold
+                        case 700: return .bold
+                        case 800: return .heavy
+                        case 900: return .black
+                        default: return .regular
+                        }
+                    }()
+                    font = .systemFont(ofSize: fontSize, weight: weight)
+                } else {
+                    font = .systemFont(ofSize: fontSize)
+                }
+                button.titleLabel?.font = font
+                
                 button.contentHorizontalAlignment = .leading
                 button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-                button.backgroundColor = itemBackgroundColor ?? .clear
+                
+                // Check for custom background color first
+                if let backgroundColorValue = item["backgroundColor"] as? Int {
+                    button.backgroundColor = CupertinoCustomSheetHandler.colorFromARGB(backgroundColorValue)
+                } else {
+                    button.backgroundColor = itemBackgroundColor ?? .clear
+                }
+                
                 button.layer.cornerRadius = 10
                 button.tag = index
                 button.addTarget(self, action: #selector(itemTapped(_:)), for: .touchUpInside)
                 
-                // Apply text color if specified
-                if let textColor = itemTextColor {
+                // Check for custom text color first
+                if let textColorValue = item["textColor"] as? Int {
+                    button.setTitleColor(CupertinoCustomSheetHandler.colorFromARGB(textColorValue), for: .normal)
+                } else if let textColor = itemTextColor {
                     button.setTitleColor(textColor, for: .normal)
                 }
                 
-                // Apply tint color if specified
-                if let tintColor = itemTintColor {
+                // Check for custom icon color first
+                if let iconColorValue = item["iconColor"] as? Int {
+                    button.tintColor = CupertinoCustomSheetHandler.colorFromARGB(iconColorValue)
+                } else if let tintColor = itemTintColor {
                     button.tintColor = tintColor
                 }
                 
                 if let iconName = item["icon"] as? String, let icon = UIImage(systemName: iconName) {
-                    button.setImage(icon, for: .normal)
+                    let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .regular)
+                    button.setImage(icon.withConfiguration(config), for: .normal)
                     button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
                 }
                 
                 contentStack.addArrangedSubview(button)
                 
                 NSLayoutConstraint.activate([
-                    button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+                    button.heightAnchor.constraint(equalToConstant: itemHeight)
                 ])
             }
+        }
+        
+        // Add item rows (horizontal groups of vertical-style items)
+        var currentItemIndex = items.count // Continue indexing from regular items
+        for itemRowDict in itemRows {
+            // Extract row-level styling properties
+            let rowSpacing = (itemRowDict["spacing"] as? NSNumber)?.doubleValue ?? 8
+            let rowHeight = (itemRowDict["height"] as? NSNumber)?.doubleValue ?? 50
+            
+            guard let rowItems = itemRowDict["items"] as? [[String: Any]] else { continue }
+            
+            let rowStack = UIStackView()
+            rowStack.axis = .horizontal
+            rowStack.distribution = .fillEqually
+            rowStack.spacing = rowSpacing
+            rowStack.translatesAutoresizingMaskIntoConstraints = false
+            
+            for item in rowItems {
+                if let title = item["title"] as? String {
+                    let button = UIButton(type: .system)
+                    button.setTitle(title, for: .normal)
+                    
+                    // Get custom styling properties
+                    let fontSize = (item["fontSize"] as? NSNumber)?.doubleValue ?? 17
+                    let iconSize = (item["iconSize"] as? NSNumber)?.doubleValue ?? 22
+                    
+                    // Apply font weight if provided
+                    var font: UIFont
+                    if let fontWeightValue = item["fontWeight"] as? Int {
+                        let weight: UIFont.Weight = {
+                            switch fontWeightValue {
+                            case 100: return .ultraLight
+                            case 200: return .thin
+                            case 300: return .light
+                            case 400: return .regular
+                            case 500: return .medium
+                            case 600: return .semibold
+                            case 700: return .bold
+                            case 800: return .heavy
+                            case 900: return .black
+                            default: return .regular
+                            }
+                        }()
+                        font = .systemFont(ofSize: fontSize, weight: weight)
+                    } else {
+                        font = .systemFont(ofSize: fontSize)
+                    }
+                    button.titleLabel?.font = font
+                    
+                    button.contentHorizontalAlignment = .center
+                    button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+                    
+                    // Check for custom background color first
+                    if let backgroundColorValue = item["backgroundColor"] as? Int {
+                        button.backgroundColor = CupertinoCustomSheetHandler.colorFromARGB(backgroundColorValue)
+                    } else {
+                        button.backgroundColor = itemBackgroundColor ?? .clear
+                    }
+                    
+                    button.layer.cornerRadius = 10
+                    button.tag = currentItemIndex
+                    button.addTarget(self, action: #selector(itemTapped(_:)), for: .touchUpInside)
+                    currentItemIndex += 1
+                    
+                    // Check for custom text color first
+                    if let textColorValue = item["textColor"] as? Int {
+                        button.setTitleColor(CupertinoCustomSheetHandler.colorFromARGB(textColorValue), for: .normal)
+                    } else if let textColor = itemTextColor {
+                        button.setTitleColor(textColor, for: .normal)
+                    }
+                    
+                    // Check for custom icon color first
+                    if let iconColorValue = item["iconColor"] as? Int {
+                        button.tintColor = CupertinoCustomSheetHandler.colorFromARGB(iconColorValue)
+                    } else if let tintColor = itemTintColor {
+                        button.tintColor = tintColor
+                    }
+                    
+                    if let iconName = item["icon"] as? String, let icon = UIImage(systemName: iconName) {
+                        let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .regular)
+                        button.setImage(icon.withConfiguration(config), for: .normal)
+                        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
+                    }
+                    
+                    rowStack.addArrangedSubview(button)
+                    
+                    NSLayoutConstraint.activate([
+                        button.heightAnchor.constraint(equalToConstant: rowHeight)
+                    ])
+                }
+            }
+            
+            contentStack.addArrangedSubview(rowStack)
         }
         
         // Layout constraints
@@ -494,17 +785,148 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
 
         syncAppearanceWithPresentingController()
         
+        // For non-modal sheets, ensure background is fully interactive
         if !isSheetModal, let presentationController = presentationController,
            let containerView = presentationController.containerView {
+            // Enable user interaction on the container
             containerView.isUserInteractionEnabled = true
+            
+            // Find and configure the dimming view to allow touches to pass through
+            for subview in containerView.subviews {
+                if String(describing: type(of: subview)).contains("UIDimmingView") {
+                    subview.isUserInteractionEnabled = false
+                    print("✅ Disabled interaction on dimming view for non-modal sheet")
+                }
+            }
         }
+    }
+    
+    private func createInlineActionButton(action: [String: Any], rowIndex: Int, actionIndex: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Store indices in the button's tag for callback
+        // Encode rowIndex in upper 16 bits, actionIndex in lower 16 bits
+        button.tag = (rowIndex << 16) | actionIndex
+        button.addTarget(self, action: #selector(inlineActionTapped(_:)), for: .touchUpInside)
+        
+        // Get custom styling properties with proper type conversion
+        let iconSize: CGFloat
+        if let sizeValue = action["iconSize"] as? NSNumber {
+            iconSize = CGFloat(sizeValue.doubleValue)
+        } else {
+            iconSize = 24
+        }
+        
+        let labelSize: CGFloat
+        if let sizeValue = action["labelSize"] as? NSNumber {
+            labelSize = CGFloat(sizeValue.doubleValue)
+        } else {
+            labelSize = 13
+        }
+        
+        let cornerRadius: CGFloat
+        if let radiusValue = action["cornerRadius"] as? NSNumber {
+            cornerRadius = CGFloat(radiusValue.doubleValue)
+        } else {
+            cornerRadius = 12
+        }
+        
+        let iconLabelSpacing: CGFloat
+        if let spacingValue = action["iconLabelSpacing"] as? NSNumber {
+            iconLabelSpacing = CGFloat(spacingValue.doubleValue)
+        } else {
+            iconLabelSpacing = 6
+        }
+        
+        // Create vertical stack for icon + label
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = iconLabelSpacing
+        stack.alignment = .center
+        stack.isUserInteractionEnabled = false
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Icon
+        if let iconName = action["icon"] as? String, let icon = UIImage(systemName: iconName) {
+            let imageView = UIImageView(image: icon)
+            let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .regular)
+            imageView.image = icon.withConfiguration(config)
+            imageView.tintColor = itemTintColor ?? .systemBlue
+            imageView.contentMode = .scaleAspectFit
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            
+            // Check if toggled
+            if let isToggled = action["isToggled"] as? Bool, isToggled {
+                imageView.tintColor = .systemYellow
+            }
+            
+            stack.addArrangedSubview(imageView)
+            
+            NSLayoutConstraint.activate([
+                imageView.widthAnchor.constraint(equalToConstant: 28),
+                imageView.heightAnchor.constraint(equalToConstant: 28)
+            ])
+        }
+        
+        // Label
+        if let label = action["label"] as? String {
+            let labelView = UILabel()
+            labelView.text = label
+            labelView.font = .systemFont(ofSize: labelSize)
+            labelView.textColor = itemTextColor ?? .label
+            labelView.textAlignment = .center
+            labelView.numberOfLines = 1
+            stack.addArrangedSubview(labelView)
+        }
+        
+        button.addSubview(stack)
+        
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: button.centerYAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: button.leadingAnchor, constant: 4),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: button.trailingAnchor, constant: -4)
+        ])
+        
+        // Background styling - check for custom backgroundColor first
+        if let backgroundColorValue = action["backgroundColor"] as? Int {
+            button.backgroundColor = CupertinoCustomSheetHandler.colorFromARGB(backgroundColorValue)
+        } else {
+            button.backgroundColor = itemBackgroundColor ?? .secondarySystemBackground
+        }
+        button.layer.cornerRadius = cornerRadius
+        
+        // Handle enabled state
+        if let enabled = action["enabled"] as? Bool, !enabled {
+            button.isEnabled = false
+            button.alpha = 0.5
+        }
+        
+        return button
+    }
+    
+    @objc private func inlineActionTapped(_ sender: UIButton) {
+        // Decode rowIndex and actionIndex from tag
+        let rowIndex = sender.tag >> 16
+        let actionIndex = sender.tag & 0xFFFF
+        
+        // Send callback to Flutter
+        channel?.invokeMethod("onInlineActionSelected", arguments: [
+            "rowIndex": rowIndex,
+            "actionIndex": actionIndex
+        ])
     }
     
     @objc private func itemTapped(_ sender: Any) {
         if let button = sender as? UIButton {
             selectedIndex = button.tag
+            // Invoke callback immediately when item is tapped
+            channel?.invokeMethod("onItemSelected", arguments: ["index": button.tag])
         } else if let gesture = sender as? UITapGestureRecognizer, let view = gesture.view {
             selectedIndex = view.tag
+            // Invoke callback immediately when item is tapped
+            channel?.invokeMethod("onItemSelected", arguments: ["index": view.tag])
         }
     }
     
