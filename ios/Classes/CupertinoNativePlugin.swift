@@ -35,6 +35,14 @@ public class CupertinoNativePlugin: NSObject, FlutterPlugin {
     let pullDownButtonFactory = CupertinoPullDownButtonViewFactory(messenger: registrar.messenger())
     registrar.register(pullDownButtonFactory, withId: "CupertinoNativePullDownButton")
 
+    if #available(iOS 14.0, *) {
+      let pullDownButtonAnchorFactory = CupertinoNativePullDownButtonAnchorFactory(messenger: registrar.messenger())
+      registrar.register(pullDownButtonAnchorFactory, withId: "CupertinoNativePullDownButtonAnchor")
+      
+      let popupButtonFactory = CupertinoNativePopupButtonFactory(messenger: registrar.messenger())
+      registrar.register(popupButtonFactory, withId: "CupertinoNativePopupButton")
+    }
+
     let buttonFactory = CupertinoButtonViewFactory(messenger: registrar.messenger())
     registrar.register(buttonFactory, withId: "CupertinoNativeButton")
 

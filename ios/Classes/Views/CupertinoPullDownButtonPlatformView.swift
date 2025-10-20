@@ -16,6 +16,9 @@ class CupertinoPullDownButtonPlatformView: NSObject, FlutterPlatformView {
   private var itemModes: [String?] = []
   private var itemPalettes: [[NSNumber]] = []
   private var itemGradients: [NSNumber?] = []
+  private var subtitles: [String?] = []
+  private var hasNavigation: [Bool] = []
+  private var submenuItemCounts: [Int] = []
   // Track current button icon configuration
   private var btnIconName: String? = nil
   private var btnIconSize: CGFloat? = nil
@@ -72,6 +75,9 @@ class CupertinoPullDownButtonPlatformView: NSObject, FlutterPlatformView {
       if let modes = dict["sfSymbolRenderingModes"] as? [String?] { self.itemModes = modes }
       if let palettes = dict["sfSymbolPaletteColors"] as? [[NSNumber]] { self.itemPalettes = palettes }
       if let gradients = dict["sfSymbolGradientEnabled"] as? [NSNumber?] { self.itemGradients = gradients }
+      if let subs = dict["subtitles"] as? [String?] { self.subtitles = subs }
+      if let navs = dict["hasNavigation"] as? [NSNumber] { self.hasNavigation = navs.map { $0.boolValue } }
+      if let counts = dict["submenuItemCounts"] as? [NSNumber] { self.submenuItemCounts = counts.map { $0.intValue } }
       if let m = dict["buttonIconRenderingMode"] as? String { buttonIconMode = m }
       if let pal = dict["buttonIconPaletteColors"] as? [NSNumber] { buttonIconPalette = pal }
       // Inline actions
@@ -174,6 +180,9 @@ class CupertinoPullDownButtonPlatformView: NSObject, FlutterPlatformView {
           self.itemModes = (args["sfSymbolRenderingModes"] as? [String?]) ?? []
           self.itemPalettes = (args["sfSymbolPaletteColors"] as? [[NSNumber]]) ?? []
           self.itemGradients = (args["sfSymbolGradientEnabled"] as? [NSNumber?]) ?? []
+          self.subtitles = (args["subtitles"] as? [String?]) ?? []
+          self.hasNavigation = ((args["hasNavigation"] as? [NSNumber]) ?? []).map { $0.boolValue }
+          self.submenuItemCounts = ((args["submenuItemCounts"] as? [NSNumber]) ?? []).map { $0.intValue }
           self.rebuildMenu(defaultSizes: sizes, defaultColors: colors)
           result(nil)
         } else { result(FlutterError(code: "bad_args", message: "Missing items", details: nil)) }
@@ -329,9 +338,10 @@ class CupertinoPullDownButtonPlatformView: NSObject, FlutterPlatformView {
       }
       
       // Build regular menu items
-      for i in 0..<count {
+      var i = 0
+      while i < count {
         let isDiv = i < dividers.count ? dividers[i] : false
-        if isDiv { flushGroup(); continue }
+        if isDiv { flushGroup(); i += 1; continue }
         let title = i < labels.count ? labels[i] : ""
         var image: UIImage? = nil
         if i < symbols.count, !symbols[i].isEmpty { image = UIImage(systemName: symbols[i]) }
@@ -383,11 +393,87 @@ class CupertinoPullDownButtonPlatformView: NSObject, FlutterPlatformView {
         }
         
         let isEnabled = i < self.enabled.count ? self.enabled[i] : true
-        let action = UIAction(title: title, image: image) { [weak self] _ in
-          self?.channel.invokeMethod("onItemSelected", arguments: i)
+        
+        // Get subtitle and submenu info
+        let subtitle = i < self.subtitles.count ? self.subtitles[i] : nil
+        let submenuCount = i < self.submenuItemCounts.count ? self.submenuItemCounts[i] : 0
+        
+        // Check if this is a submenu (has child items)
+        if submenuCount > 0, #available(iOS 14.0, *) {
+          // Build submenu children
+          var submenuChildren: [UIMenuElement] = []
+          for childIdx in (i + 1)...(i + submenuCount) {
+            guard childIdx < self.labels.count else { break }
+            
+            let childTitle = self.labels[childIdx]
+            let childIsDivider = childIdx < self.dividers.count ? self.dividers[childIdx] : false
+            
+            if childIsDivider {
+              // Dividers within submenus are handled by sections
+              continue
+            }
+            
+            var childImage: UIImage? = nil
+            if childIdx < self.symbols.count, !self.symbols[childIdx].isEmpty {
+              let childSymbolName = self.symbols[childIdx]
+              if #available(iOS 13.0, *) {
+                childImage = UIImage(systemName: childSymbolName)
+              }
+              // Apply sizing and coloring for child
+              if let childImg = childImage {
+                if childIdx < self.itemSizes.count {
+                  let size = CGFloat(truncating: self.itemSizes[childIdx])
+                  let cfg = UIImage.SymbolConfiguration(pointSize: size)
+                  childImage = childImg.applyingSymbolConfiguration(cfg)
+                }
+              }
+              // Apply rendering modes for child (simplified, can be expanded)
+              if childIdx < self.itemModes.count, let childMode = self.itemModes[childIdx] {
+                // ... (color/mode logic can be added similar to parent)
+              } else if let childImg = childImage, let defaultColors = defaultColors, childIdx < defaultColors.count {
+                let c = Self.colorFromARGB(defaultColors[childIdx].intValue)
+                if #available(iOS 15.0, *) {
+                  let cfg = UIImage.SymbolConfiguration(hierarchicalColor: c)
+                  childImage = childImg.applyingSymbolConfiguration(cfg)
+                }
+              }
+            }
+            
+            let childIsEnabled = childIdx < self.enabled.count ? self.enabled[childIdx] : true
+            let childAction = UIAction(title: childTitle, image: childImage) { [weak self] _ in
+              self?.channel.invokeMethod("onItemSelected", arguments: childIdx)
+            }
+            childAction.attributes = childIsEnabled ? [] : [.disabled]
+            submenuChildren.append(childAction)
+          }
+          
+          // Create submenu with subtitle
+          let submenu: UIMenu
+          if #available(iOS 15.0, *), let subtitle = subtitle, !subtitle.isEmpty {
+            submenu = UIMenu(title: title, subtitle: subtitle, image: image, children: submenuChildren)
+          } else {
+            submenu = UIMenu(title: title, image: image, children: submenuChildren)
+          }
+          current.append(submenu)
+          
+          // Skip the child items we just processed
+          i += submenuCount + 1
+        } else {
+          // Regular action (no submenu)
+          let action: UIAction
+          if #available(iOS 15.0, *), let subtitle = subtitle, !subtitle.isEmpty {
+            action = UIAction(title: title, subtitle: subtitle, image: image) { [weak self] _ in
+              self?.channel.invokeMethod("onItemSelected", arguments: i)
+            }
+          } else {
+            action = UIAction(title: title, image: image) { [weak self] _ in
+              self?.channel.invokeMethod("onItemSelected", arguments: i)
+            }
+          }
+          action.attributes = isEnabled ? [] : [.disabled]
+          current.append(action)
+          i += 1
         }
-        action.attributes = isEnabled ? [] : [.disabled]
-        current.append(action)
       }
       flushGroup()
       

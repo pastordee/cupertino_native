@@ -49,8 +49,11 @@ class _PullDownInlineActionsDemoState
             ),
             const SizedBox(height: 12),
             CNPullDownButton(
+              tint: CupertinoColors.systemGreen,
               buttonLabel: 'Note Actions',
-              buttonStyle: CNButtonStyle.glass,
+              buttonStyle: CNButtonStyle.tinted,
+              // menuTitle: 'Note Actions',
+              height: 44,
               onSelected: (index) {
                 setState(() {
                   _lastAction = 'Menu item $index';
@@ -91,19 +94,66 @@ class _PullDownInlineActionsDemoState
                 ),
                 // Regular menu items below
                 const CNPullDownMenuDivider(),
-                CNPullDownMenuItem(
-                  label: 'Share Note',
-                  icon: CNSymbol('square.and.arrow.up'),
+                CNPullDownMenuSubmenu(
+                  title: 'Find in Note',
+                  icon: CNSymbol('magnifyingglass'),
+                  items: [
+                    CNPullDownMenuItem(
+                      label: 'Find in Note',
+                      icon: CNSymbol('magnifyingglass'),
+                    ),
+                  ],
                 ),
                 CNPullDownMenuItem(
-                  label: 'Send Copy',
-                  icon: CNSymbol('paperplane'),
+                  label: 'Move Note',
+                  icon: CNSymbol('folder'),
+                ),
+                CNPullDownMenuSubmenu(
+                  title: 'Recent Notes',
+                  icon: CNSymbol('clock'),
+                  items: [
+                    CNPullDownMenuItem(
+                      label: 'Work Notes',
+                      icon: CNSymbol('briefcase'),
+                    ),
+                    CNPullDownMenuItem(
+                      label: 'Personal',
+                      icon: CNSymbol('house'),
+                    ),
+                  ],
+                ),
+                const CNPullDownMenuDivider(),
+                CNPullDownMenuSubmenu(
+                  title: 'Math Results',
+                  subtitle: 'Suggest Results',
+                  icon: CNSymbol('equal.circle'),
+                  items: [
+                    CNPullDownMenuItem(
+                      label: 'Math Results',
+                      icon: CNSymbol('equal.circle'),
+                    ),
+                  ],
                 ),
                 const CNPullDownMenuDivider(),
                 CNPullDownMenuItem(
-                  label: 'Move to Folder',
-                  icon: CNSymbol('folder'),
+                  label: 'Lines and Grids',
+                  icon: CNSymbol('square.grid.3x3'),
                 ),
+                CNPullDownMenuSubmenu(
+                  title: 'Attachment View',
+                  icon: CNSymbol('paperclip'),
+                  items: [
+                    CNPullDownMenuItem(
+                      label: 'Gallery View',
+                      icon: CNSymbol('square.grid.2x2'),
+                    ),
+                    CNPullDownMenuItem(
+                      label: 'List View',
+                      icon: CNSymbol('list.bullet'),
+                    ),
+                  ],
+                ),
+                const CNPullDownMenuDivider(),
                 CNPullDownMenuItem(
                   label: 'Delete',
                   icon: CNSymbol('trash'),
@@ -213,7 +263,12 @@ class _PullDownInlineActionsDemoState
                       label: 'Star',
                       icon: CNSymbol(
                         'star',
-                        size: 24,
+                        size: 14,
+                        mode: CNSymbolRenderingMode.multicolor,
+                        paletteColors: [
+                          CupertinoColors.systemRed,
+                          CupertinoColors.systemGreen,
+                        ],
                       ),
                     ),
                     CNPullDownInlineAction(

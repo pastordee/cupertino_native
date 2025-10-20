@@ -9,6 +9,8 @@ export 'components/icon.dart';
 export 'components/tab_bar.dart';
 export 'components/popup_menu_button.dart';
 export 'components/pull_down_button.dart';
+export 'components/pull_down_button_anchor.dart';
+export 'components/popup_button.dart';
 export 'components/navigation_bar.dart';
 export 'components/toolbar.dart';
 export 'components/bottom_toolbar.dart';

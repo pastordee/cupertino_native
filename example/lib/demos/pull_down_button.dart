@@ -34,7 +34,7 @@ class _PullDownButtonDemoState extends State<PullDownButtonDemo> {
         middle: Text('Pull-Down Button'),
       ),
       child: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,33 +155,162 @@ class _PullDownButtonDemoState extends State<PullDownButtonDemo> {
               const SizedBox(height: 10),
               
               CNPullDownButton(
-                buttonLabel: 'Export',
+                buttonLabel: 'File Options',
                 items: [
+                  CNPullDownMenuItem(
+                    label: 'New File',
+                    icon: CNSymbol('doc.badge.plus'),
+                  ),
+                  CNPullDownMenuItem(
+                    label: 'Open',
+                    icon: CNSymbol('folder'),
+                  ),
+                  CNPullDownMenuDivider(),
                   CNPullDownMenuSubmenu(
-                    title: 'Export Options',
+                    title: 'Export As...',
                     icon: CNSymbol('square.and.arrow.up'),
                     items: [
                       CNPullDownMenuItem(
-                        label: 'PDF',
+                        label: 'PDF Document',
                         icon: CNSymbol('doc.text'),
                       ),
                       CNPullDownMenuItem(
-                        label: 'Image',
+                        label: 'PNG Image',
                         icon: CNSymbol('photo'),
                       ),
                       CNPullDownMenuItem(
-                        label: 'Text',
-                        icon: CNSymbol('doc.text'),
+                        label: 'JPEG Image',
+                        icon: CNSymbol('photo.fill'),
+                      ),
+                      CNPullDownMenuDivider(),
+                      CNPullDownMenuItem(
+                        label: 'Plain Text',
+                        icon: CNSymbol('doc.plaintext'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Rich Text',
+                        icon: CNSymbol('doc.richtext'),
                       ),
                     ],
                   ),
+                  CNPullDownMenuSubmenu(
+                    title: 'Share To...',
+                    icon: CNSymbol('square.and.arrow.up.circle'),
+                    items: [
+                      CNPullDownMenuItem(
+                        label: 'Messages',
+                        icon: CNSymbol('message'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Mail',
+                        icon: CNSymbol('envelope'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'AirDrop',
+                        icon: CNSymbol('airplayaudio'),
+                      ),
+                      CNPullDownMenuDivider(),
+                      CNPullDownMenuItem(
+                        label: 'More...',
+                        icon: CNSymbol('ellipsis.circle'),
+                      ),
+                    ],
+                  ),
+                  CNPullDownMenuDivider(),
                   CNPullDownMenuItem(
-                    label: 'Share',
-                    icon: CNSymbol('square.and.arrow.up'),
+                    label: 'Print',
+                    icon: CNSymbol('printer'),
                   ),
                 ],
                 onSelected: _handleMenuSelection,
                 height: 44.0,
+              ),
+              
+              const SizedBox(height: 30),
+              
+              const Text(
+                'Text Formatting Menu:',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              
+              CNPullDownButton.icon(
+                buttonIcon: CNSymbol('textformat'),
+                items: [
+                  CNPullDownMenuSubmenu(
+                    title: 'Font Style',
+                    icon: CNSymbol('bold.italic.underline'),
+                    items: [
+                      CNPullDownMenuItem(
+                        label: 'Bold',
+                        icon: CNSymbol('bold'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Italic',
+                        icon: CNSymbol('italic'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Underline',
+                        icon: CNSymbol('underline'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Strikethrough',
+                        icon: CNSymbol('strikethrough'),
+                      ),
+                    ],
+                  ),
+                  CNPullDownMenuSubmenu(
+                    title: 'Text Alignment',
+                    icon: CNSymbol('text.alignleft'),
+                    items: [
+                      CNPullDownMenuItem(
+                        label: 'Align Left',
+                        icon: CNSymbol('text.alignleft'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Align Center',
+                        icon: CNSymbol('text.aligncenter'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Align Right',
+                        icon: CNSymbol('text.alignright'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Justify',
+                        icon: CNSymbol('text.justify'),
+                      ),
+                    ],
+                  ),
+                  CNPullDownMenuSubmenu(
+                    title: 'List Style',
+                    icon: CNSymbol('list.bullet'),
+                    items: [
+                      CNPullDownMenuItem(
+                        label: 'Bullet List',
+                        icon: CNSymbol('list.bullet'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Numbered List',
+                        icon: CNSymbol('list.number'),
+                      ),
+                      CNPullDownMenuItem(
+                        label: 'Checklist',
+                        icon: CNSymbol('checklist'),
+                      ),
+                    ],
+                  ),
+                  CNPullDownMenuDivider(),
+                  CNPullDownMenuItem(
+                    label: 'Clear Formatting',
+                    icon: CNSymbol('trash'),
+                    isDestructive: true,
+                  ),
+                ],
+                onSelected: _handleMenuSelection,
+                size: 44.0,
               ),
               
               const SizedBox(height: 40),

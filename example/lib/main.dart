@@ -9,6 +9,8 @@ import 'demos/popup_menu_button.dart';
 import 'demos/popup_menu_demo.dart';
 import 'demos/popup_menu_styles_demo.dart';
 import 'demos/pull_down_button.dart';
+import 'demos/pull_down_button_anchor_demo.dart';
+import 'demos/popup_button_demo.dart';
 import 'demos/pull_down_inline_actions_demo.dart';
 import 'demos/button.dart';
 import 'demos/navigation_bar.dart';
@@ -255,6 +257,34 @@ class HomePage extends StatelessWidget {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
                       builder: (_) => const PullDownInlineActionsDemo(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Pull-Down Button Anchor'),
+                leading: CNIcon(
+                  symbol: CNSymbol('arrow.up.right.circle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const PullDownButtonAnchorDemo(),
+                    ),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Pop-up Button'),
+                leading: CNIcon(
+                  symbol: CNSymbol('checkmark.circle', color: accentColor),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const PopupButtonDemo(),
                     ),
                   );
                 },

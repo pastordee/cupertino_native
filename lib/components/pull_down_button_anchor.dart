@@ -6,176 +6,72 @@ import 'package:flutter/gestures.dart';
 import '../channel/params.dart';
 import '../style/sf_symbol.dart';
 import '../style/button_style.dart';
+import 'pull_down_button.dart'; // Import menu entry classes
 
-/// Base type for entries in a [CNPullDownButton] menu.
-abstract class CNPullDownMenuEntry {
-  /// Const constructor for subclasses.
-  const CNPullDownMenuEntry();
-}
-
-/// A selectable item in a pull-down menu.
-class CNPullDownMenuItem extends CNPullDownMenuEntry {
-  /// Creates a selectable pull-down menu item.
-  const CNPullDownMenuItem({
-    required this.label, 
-    this.icon, 
-    this.enabled = true,
-    this.isDestructive = false,
-    this.subtitle,
-    this.hasNavigation = false,
-  });
-
-  /// Display label for the item.
-  final String label;
-
-  /// Optional SF Symbol shown before the label.
-  final CNSymbol? icon;
-
-  /// Whether the item can be selected.
-  final bool enabled;
-
-  /// Whether this is a destructive action (shown in red).
-  final bool isDestructive;
-  
-  /// Optional subtitle text shown below the label in gray.
-  final String? subtitle;
-  
-  /// Whether to show a trailing chevron (navigation indicator).
-  final bool hasNavigation;
-}
-
-/// A visual divider between pull-down menu items.
-class CNPullDownMenuDivider extends CNPullDownMenuEntry {
-  /// Creates a visual divider between items.
-  const CNPullDownMenuDivider();
-}
-
-/// A submenu in a pull-down menu.
-class CNPullDownMenuSubmenu extends CNPullDownMenuEntry {
-  /// Creates a submenu with its own items.
-  const CNPullDownMenuSubmenu({
-    required this.title,
-    required this.items,
-    this.icon,
-    this.subtitle,
-  });
-
-  /// Title of the submenu.
-  final String title;
-
-  /// Items in the submenu.
-  final List<CNPullDownMenuEntry> items;
-
-  /// Optional SF Symbol shown before the title.
-  final CNSymbol? icon;
-  
-  /// Optional subtitle text shown below the title in gray.
-  final String? subtitle;
-}
-
-/// A horizontal row of inline action buttons in a pull-down menu.
+/// A Cupertino-native pull-down button with automatic menu anchoring.
 ///
-/// These appear as icon buttons across the top of the menu, similar to iOS Notes app.
-/// On iOS 15+, this creates a displayInline menu section with prominent buttons.
-class CNPullDownMenuInlineActions extends CNPullDownMenuEntry {
-  /// Creates a row of inline action buttons.
-  const CNPullDownMenuInlineActions({
-    required this.actions,
-  });
-
-  /// The inline actions to display horizontally.
-  final List<CNPullDownInlineAction> actions;
-}
-
-/// An individual inline action button.
-class CNPullDownInlineAction {
-  /// Creates an inline action button.
-  const CNPullDownInlineAction({
-    required this.label,
-    required this.icon,
-    this.enabled = true,
-  });
-
-  /// Label displayed below the icon.
-  final String label;
-
-  /// SF Symbol icon to display.
-  final CNSymbol icon;
-
-  /// Whether the action can be tapped.
-  final bool enabled;
-}
-
-/// A Cupertino-native pull-down button.
+/// This creates a popup menu that appears anchored to the button, similar to 
+/// UIMenu with automatic presentation. The menu appears near the button with
+/// an arrow pointing to it.
 ///
-/// Pull-down buttons display a menu of items or actions that directly relate 
-/// to the button's purpose. The menu appears below the button when tapped.
-/// 
 /// On iOS/macOS this uses native UIButton with UIMenu for authentic behavior.
-class CNPullDownButton extends StatefulWidget {
-  /// Creates a text-labeled pull-down button.
-  const CNPullDownButton({
+/// The menu presentation style is set to automatic, allowing the system to
+/// choose the best presentation (typically a popover-style menu).
+class CNPullDownButtonAnchor extends StatefulWidget {
+  /// Creates a text-labeled pull-down button with automatic anchoring.
+  const CNPullDownButtonAnchor({
     super.key,
     required this.buttonLabel,
     required this.items,
     required this.onSelected,
-    this.onInlineActionSelected,
     this.tint,
-    this.height = 32.0,
-    this.shrinkWrap = false,
+    this.height = 44.0,
+    this.width,
     this.buttonStyle = CNButtonStyle.plain,
     this.menuTitle,
+    this.alignment = Alignment.center,
   }) : buttonIcon = null,
-       width = null,
        round = false;
 
-  /// Creates a round, icon-only pull-down button.
-  const CNPullDownButton.icon({
+  /// Creates a round, icon-only pull-down button with automatic anchoring.
+  const CNPullDownButtonAnchor.icon({
     super.key,
     required this.buttonIcon,
     required this.items,
     required this.onSelected,
-    this.onInlineActionSelected,
     this.tint,
-    double size = 44.0, // button diameter (width = height)
+    double size = 44.0,
     this.buttonStyle = CNButtonStyle.glass,
     this.menuTitle,
+    this.alignment = Alignment.center,
   }) : buttonLabel = null,
        round = true,
        width = size,
-       height = size,
-       shrinkWrap = false,
-       super();
+       height = size;
 
   /// Text for the button (null when using [buttonIcon]).
   final String? buttonLabel;
-  
+
   /// Icon for the button (non-null in icon mode).
   final CNSymbol? buttonIcon;
-  
-  /// Fixed width in icon mode; otherwise computed/intrinsic.
+
+  /// Fixed width; if null, uses intrinsic width.
   final double? width;
 
   /// Whether this is the round icon variant.
   final bool round;
-  
+
+  /// Control height; icon mode uses diameter semantics.
+  final double height;
+
   /// Entries that populate the pull-down menu.
   final List<CNPullDownMenuEntry> items;
 
   /// Called with the selected index when the user makes a selection.
   final ValueChanged<int> onSelected;
 
-  /// Called with the selected index when an inline action is tapped.
-  final ValueChanged<int>? onInlineActionSelected;
-
   /// Tint color for the control.
   final Color? tint;
-
-  /// Control height; icon mode uses diameter semantics.
-  final double height;
-
-  /// If true, sizes the control to its intrinsic width.
-  final bool shrinkWrap;
 
   /// Visual style to apply to the button.
   final CNButtonStyle buttonStyle;
@@ -183,14 +79,17 @@ class CNPullDownButton extends StatefulWidget {
   /// Optional title for the menu.
   final String? menuTitle;
 
+  /// Alignment of the button content.
+  final Alignment alignment;
+
   /// Whether this instance is configured as an icon button variant.
   bool get isIconButton => buttonIcon != null;
 
   @override
-  State<CNPullDownButton> createState() => _CNPullDownButtonState();
+  State<CNPullDownButtonAnchor> createState() => _CNPullDownButtonAnchorState();
 }
 
-class _CNPullDownButtonState extends State<CNPullDownButton> {
+class _CNPullDownButtonAnchorState extends State<CNPullDownButtonAnchor> {
   MethodChannel? _channel;
   bool? _lastIsDark;
   int? _lastTint;
@@ -208,7 +107,7 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
       widget.tint ?? CupertinoTheme.of(context).primaryColor;
 
   @override
-  void didUpdateWidget(covariant CNPullDownButton oldWidget) {
+  void didUpdateWidget(covariant CNPullDownButtonAnchor oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncPropsToNativeIfNeeded();
   }
@@ -234,41 +133,28 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
         height: widget.height,
         width: widget.isIconButton && widget.round
             ? (widget.width ?? widget.height)
-            : null,
+            : widget.width,
         child: CupertinoButton(
           padding: widget.isIconButton
               ? const EdgeInsets.all(4)
-              : const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           onPressed: () => _showPullDownMenu(),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.isIconButton)
-                Icon(
-                  widget.buttonIcon?.name.isNotEmpty == true 
-                    ? IconData(
-                        widget.buttonIcon!.name.codeUnitAt(0),
-                        fontFamily: 'SF Pro Icons',
-                      )
-                    : CupertinoIcons.ellipsis_circle, 
-                  size: widget.buttonIcon?.size,
+          child: widget.isIconButton
+              ? Icon(
+                  widget.buttonIcon?.name.isNotEmpty == true
+                      ? IconData(
+                          widget.buttonIcon!.name.codeUnitAt(0),
+                          fontFamily: 'SF Pro Icons',
+                        )
+                      : CupertinoIcons.ellipsis_circle,
+                  size: widget.buttonIcon?.size ?? 22,
                 )
-              else
-                Text(widget.buttonLabel ?? ''),
-              if (!widget.isIconButton) ...[
-                const SizedBox(width: 4),
-                const Icon(
-                  CupertinoIcons.chevron_down,
-                  size: 12,
-                ),
-              ],
-            ],
-          ),
+              : Text(widget.buttonLabel ?? ''),
         ),
       );
     }
 
-    const viewType = 'CupertinoNativePullDownButton';
+    const viewType = 'CupertinoNativePullDownButtonAnchor';
 
     // Flatten entries into parallel arrays for the platform view.
     final labels = <String>[];
@@ -281,21 +167,7 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
     final modes = <String?>[];
     final palettes = <List<int?>?>[];
     final gradients = <bool?>[];
-    final isInlineAction = <bool>[];
-    final subtitles = <String?>[];
-    final hasNavigation = <bool>[];
-    final submenuItemCounts = <int>[]; // Number of items in each submenu (0 for non-submenus)
-    
-    // Track inline actions separately for grouping
-    final inlineActionLabels = <String>[];
-    final inlineActionSymbols = <String>[];
-    final inlineActionEnabled = <bool>[];
-    final inlineActionSizes = <double?>[];
-    final inlineActionColors = <int?>[];
-    final inlineActionModes = <String?>[];
-    final inlineActionPalettes = <List<int?>?>[];
-    final inlineActionGradients = <bool?>[];
-    
+
     for (final e in widget.items) {
       if (e is CNPullDownMenuDivider) {
         labels.add('');
@@ -308,10 +180,6 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
         modes.add(null);
         palettes.add(null);
         gradients.add(null);
-        isInlineAction.add(false);
-        subtitles.add(null);
-        hasNavigation.add(false);
-        submenuItemCounts.add(0);
       } else if (e is CNPullDownMenuItem) {
         labels.add(e.label);
         symbols.add(e.icon?.name ?? '');
@@ -327,85 +195,6 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
               .toList(),
         );
         gradients.add(e.icon?.gradient);
-        isInlineAction.add(false);
-        subtitles.add(e.subtitle);
-        hasNavigation.add(false); // Regular items don't have navigation
-        submenuItemCounts.add(0);
-      } else if (e is CNPullDownMenuSubmenu) {
-        // Add submenu parent
-        labels.add(e.title);
-        symbols.add(e.icon?.name ?? '');
-        isDivider.add(false);
-        enabled.add(true);
-        isDestructive.add(false);
-        sizes.add(e.icon?.size);
-        colors.add(resolveColorToArgb(e.icon?.color, context));
-        modes.add(e.icon?.mode?.name);
-        palettes.add(
-          e.icon?.paletteColors
-              ?.map((c) => resolveColorToArgb(c, context))
-              .toList(),
-        );
-        gradients.add(e.icon?.gradient);
-        isInlineAction.add(false);
-        subtitles.add(e.subtitle);
-        hasNavigation.add(true); // Submenus show navigation chevron
-        submenuItemCounts.add(e.items.length);
-        
-        // Add submenu child items
-        for (final child in e.items) {
-          if (child is CNPullDownMenuItem) {
-            labels.add(child.label);
-            symbols.add(child.icon?.name ?? '');
-            isDivider.add(false);
-            enabled.add(child.enabled);
-            isDestructive.add(child.isDestructive);
-            sizes.add(child.icon?.size);
-            colors.add(resolveColorToArgb(child.icon?.color, context));
-            modes.add(child.icon?.mode?.name);
-            palettes.add(
-              child.icon?.paletteColors
-                  ?.map((c) => resolveColorToArgb(c, context))
-                  .toList(),
-            );
-            gradients.add(child.icon?.gradient);
-            isInlineAction.add(false);
-            subtitles.add(child.subtitle);
-            hasNavigation.add(false);
-            submenuItemCounts.add(0);
-          } else if (child is CNPullDownMenuDivider) {
-            labels.add('');
-            symbols.add('');
-            isDivider.add(true);
-            enabled.add(false);
-            isDestructive.add(false);
-            sizes.add(null);
-            colors.add(null);
-            modes.add(null);
-            palettes.add(null);
-            gradients.add(null);
-            isInlineAction.add(false);
-            subtitles.add(null);
-            hasNavigation.add(false);
-            submenuItemCounts.add(0);
-          }
-        }
-      } else if (e is CNPullDownMenuInlineActions) {
-        // Add inline actions
-        for (final action in e.actions) {
-          inlineActionLabels.add(action.label);
-          inlineActionSymbols.add(action.icon.name);
-          inlineActionEnabled.add(action.enabled);
-          inlineActionSizes.add(action.icon.size);
-          inlineActionColors.add(resolveColorToArgb(action.icon.color, context));
-          inlineActionModes.add(action.icon.mode?.name);
-          inlineActionPalettes.add(
-            action.icon.paletteColors
-                ?.map((c) => resolveColorToArgb(c, context))
-                .toList(),
-          );
-          inlineActionGradients.add(action.icon.gradient);
-        }
       }
     }
 
@@ -442,20 +231,7 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
             .toList(),
       if (widget.buttonIcon?.gradient != null)
         'buttonIconGradientEnabled': widget.buttonIcon!.gradient,
-      'subtitles': subtitles,
-      'hasNavigation': hasNavigation,
-      'submenuItemCounts': submenuItemCounts,
-      // Inline actions
-      if (inlineActionLabels.isNotEmpty) ...{
-        'inlineActionLabels': inlineActionLabels,
-        'inlineActionSymbols': inlineActionSymbols,
-        'inlineActionEnabled': inlineActionEnabled,
-        'inlineActionSizes': inlineActionSizes,
-        'inlineActionColors': inlineActionColors,
-        'inlineActionModes': inlineActionModes,
-        'inlineActionPaletteColors': inlineActionPalettes,
-        'inlineActionGradientEnabled': inlineActionGradients,
-      },
+      'anchoredMenu': true, // Key parameter for automatic presentation
     };
 
     final platformView = defaultTargetPlatform == TargetPlatform.iOS
@@ -480,14 +256,13 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final hasBoundedWidth = constraints.hasBoundedWidth;
-        final preferIntrinsic = widget.shrinkWrap || !hasBoundedWidth;
-        double? width;
-        if (widget.isIconButton) {
-          width = widget.width ?? widget.height;
-        } else if (preferIntrinsic) {
-          width = _intrinsicWidth ?? 80.0;
+        double? width = widget.width;
+        if (widget.isIconButton && width == null) {
+          width = widget.height;
+        } else if (!widget.isIconButton && width == null) {
+          width = _intrinsicWidth ?? 120.0;
         }
+
         return Listener(
           onPointerDown: (e) {
             _downPosition = e.position;
@@ -521,7 +296,7 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
   }
 
   void _onCreated(int id) {
-    final ch = MethodChannel('CupertinoNativePullDownButton_$id');
+    final ch = MethodChannel('CupertinoNativePullDownButtonAnchor_$id');
     _channel = ch;
     ch.setMethodCallHandler(_onMethodCall);
     _lastTint = resolveColorToArgb(_effectiveTint, context);
@@ -541,9 +316,6 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
       final args = call.arguments as Map?;
       final idx = (args?['index'] as num?)?.toInt();
       if (idx != null) widget.onSelected(idx);
-    } else if (call.method == 'onInlineActionSelected') {
-      final idx = (call.arguments as num?)?.toInt();
-      if (idx != null) widget.onInlineActionSelected?.call(idx);
     }
     return null;
   }
@@ -563,26 +335,20 @@ class _CNPullDownButtonState extends State<CNPullDownButton> {
   Future<void> _syncPropsToNativeIfNeeded() async {
     final ch = _channel;
     if (ch == null) return;
-    
-    // Similar to popup menu button but for pull-down specific properties
+
     final tint = resolveColorToArgb(_effectiveTint, context);
-    final preIconName = widget.buttonIcon?.name;
-    final preIconSize = widget.buttonIcon?.size;
-    final preIconColor = resolveColorToArgb(widget.buttonIcon?.color, context);
-    
+
     if (_lastTint != tint && tint != null) {
       await ch.invokeMethod('setStyle', {'tint': tint});
       _lastTint = tint;
     }
-    
+
     if (_lastStyle != widget.buttonStyle) {
       await ch.invokeMethod('setStyle', {
         'buttonStyle': widget.buttonStyle.name,
       });
       _lastStyle = widget.buttonStyle;
     }
-    
-    // Update other properties as needed...
   }
 
   Future<void> _syncBrightnessIfNeeded() async {
