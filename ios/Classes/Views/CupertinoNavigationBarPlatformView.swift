@@ -29,10 +29,12 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     var leadingLabelSizes: [Double] = []
     var leadingIconSizes: [Double] = []
     var leadingSpacers: [String] = []
+    var leadingTints: [Int] = []
     var middleIcons: [String] = []
     var middleLabels: [String] = []
     var middlePaddings: [Double] = []
     var middleSpacers: [String] = []
+    var middleTints: [Int] = []
     var middleAlignment: String = "center"
     var trailingIcons: [String] = []
     var trailingLabels: [String] = []
@@ -40,6 +42,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     var trailingLabelSizes: [Double] = []
     var trailingIconSizes: [Double] = []
     var trailingSpacers: [String] = []
+    var trailingTints: [Int] = []
     var largeTitle: Bool = false
     var transparent: Bool = false
     var isDark: Bool = false
@@ -56,10 +59,12 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       leadingLabelSizes = (dict["leadingLabelSizes"] as? [Double]) ?? []
       leadingIconSizes = (dict["leadingIconSizes"] as? [Double]) ?? []
       leadingSpacers = (dict["leadingSpacers"] as? [String]) ?? []
+      leadingTints = (dict["leadingTints"] as? [Int]) ?? []
       middleIcons = (dict["middleIcons"] as? [String]) ?? []
       middleLabels = (dict["middleLabels"] as? [String]) ?? []
       middlePaddings = (dict["middlePaddings"] as? [Double]) ?? []
       middleSpacers = (dict["middleSpacers"] as? [String]) ?? []
+      middleTints = (dict["middleTints"] as? [Int]) ?? []
       middleAlignment = (dict["middleAlignment"] as? String) ?? "center"
       trailingIcons = (dict["trailingIcons"] as? [String]) ?? []
       trailingLabels = (dict["trailingLabels"] as? [String]) ?? []
@@ -67,6 +72,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       trailingLabelSizes = (dict["trailingLabelSizes"] as? [Double]) ?? []
       trailingIconSizes = (dict["trailingIconSizes"] as? [Double]) ?? []
       trailingSpacers = (dict["trailingSpacers"] as? [String]) ?? []
+      trailingTints = (dict["trailingTints"] as? [Int]) ?? []
       leadingPopupMenus = (dict["leadingPopupMenus"] as? [Any?]) ?? []
       middlePopupMenus = (dict["middlePopupMenus"] as? [Any?]) ?? []
       trailingPopupMenus = (dict["trailingPopupMenus"] as? [Any?]) ?? []
@@ -153,6 +159,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       var currentGroupLabelSizes: [Double] = []
       var currentGroupIconSizes: [Double] = []
       var currentGroupIndices: [Int] = []
+      var currentGroupTints: [Int] = []
       var pendingSpacing: Double = 0.0  // Track spacing to add to next button
       
       func finalizeCurrentGroup() {
@@ -165,6 +172,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             iconSizes: currentGroupIconSizes,
             pillHeight: pillHeight,
             tint: tint,
+            tints: currentGroupTints,
             isDark: isDark,
             target: self,
             action: #selector(leadingTapped(_:)),
@@ -189,6 +197,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupLabelSizes = []
           currentGroupIconSizes = []
           currentGroupIndices = []
+          currentGroupTints = []
           pendingSpacing = 0.0
         }
       }
@@ -221,6 +230,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           var padding = i < leadingPaddings.count ? leadingPaddings[i] : 0.0
           let labelSize = i < leadingLabelSizes.count ? leadingLabelSizes[i] : 0.0
           let iconSize = i < leadingIconSizes.count ? leadingIconSizes[i] : 0.0
+          let tintValue = i < leadingTints.count ? leadingTints[i] : 0
           
           // Add any pending spacing from a previous fixedSpace
           padding += pendingSpacing
@@ -232,6 +242,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupLabelSizes.append(labelSize)
           currentGroupIconSizes.append(iconSize)
           currentGroupIndices.append(i)
+          currentGroupTints.append(tintValue)
         }
       }
       
@@ -250,6 +261,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       var currentGroupLabels: [String] = []
       var currentGroupPaddings: [Double] = []
       var currentGroupIndices: [Int] = []
+      var currentGroupTints: [Int] = []
       var pendingSpacing: Double = 0.0  // Track spacing to add to next button
       
       func finalizeCurrentGroup() {
@@ -262,6 +274,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             iconSizes: [], // Middle section doesn't use custom sizes in navigation bar
             pillHeight: pillHeight,
             tint: tint,
+            tints: currentGroupTints,
             isDark: isDark,
             target: self,
             action: #selector(middleTapped(_:)),
@@ -284,6 +297,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupLabels = []
           currentGroupPaddings = []
           currentGroupIndices = []
+          currentGroupTints = []
           pendingSpacing = 0.0
         }
       }
@@ -314,6 +328,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           let icon = i < middleIcons.count ? middleIcons[i] : ""
           let label = i < middleLabels.count ? middleLabels[i] : ""
           var padding = i < middlePaddings.count ? middlePaddings[i] : 0
+          let tintValue = i < middleTints.count ? middleTints[i] : 0
           
           // Add any pending spacing from a previous fixedSpace
           padding += pendingSpacing
@@ -323,6 +338,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupLabels.append(label)
           currentGroupPaddings.append(padding)
           currentGroupIndices.append(i)
+          currentGroupTints.append(tintValue)
         }
       }
       
@@ -419,6 +435,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       var currentGroupLabelSizes: [Double] = []
       var currentGroupIconSizes: [Double] = []
       var currentGroupIndices: [Int] = []
+      var currentGroupTints: [Int] = []
       var pendingSpacing: Double = 0.0  // Track spacing to add to next button
       
       func finalizeCurrentGroup() {
@@ -431,6 +448,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             iconSizes: currentGroupIconSizes,
             pillHeight: pillHeight,
             tint: tint,
+            tints: currentGroupTints,
             isDark: isDark,
             target: self,
             action: #selector(trailingTapped(_:)),
@@ -455,6 +473,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupLabelSizes = []
           currentGroupIconSizes = []
           currentGroupIndices = []
+          currentGroupTints = []
           pendingSpacing = 0.0
         }
       }
@@ -487,6 +506,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           var padding = i < trailingPaddings.count ? trailingPaddings[i] : 0
           let labelSize = i < trailingLabelSizes.count ? trailingLabelSizes[i] : 0.0
           let iconSize = i < trailingIconSizes.count ? trailingIconSizes[i] : 0.0
+          let tintValue = i < trailingTints.count ? trailingTints[i] : 0
           
           // Add any pending spacing from a previous fixedSpace
           padding += pendingSpacing
@@ -498,6 +518,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupLabelSizes.append(labelSize)
           currentGroupIconSizes.append(iconSize)
           currentGroupIndices.append(i)
+          currentGroupTints.append(tintValue)
         }
       }
       
@@ -710,6 +731,7 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     iconSizes: [Double],
     pillHeight: Double?,
     tint: UIColor?,
+    tints: [Int] = [],
     isDark: Bool,
     target: Any?,
     action: Selector,
@@ -788,7 +810,10 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
         button.titleLabel?.font = UIFont.systemFont(ofSize: labelSize, weight: .semibold)
       }
       
-      if let tintColor = tint {
+      // Apply individual tint color if available, otherwise use global tint
+      if i < tints.count && tints[i] != 0 {
+        button.tintColor = UIColor(argb: tints[i])
+      } else if let tintColor = tint {
         button.tintColor = tintColor
       }
       

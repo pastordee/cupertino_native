@@ -21,6 +21,7 @@ class CNNavigationBarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   })  : popupMenuItems = null,
         onPopupMenuSelected = null,
         _isFixedSpace = false,
@@ -37,6 +38,7 @@ class CNNavigationBarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   })  : onPressed = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
@@ -53,6 +55,7 @@ class CNNavigationBarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   })  : onPressed = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
@@ -69,6 +72,7 @@ class CNNavigationBarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   })  : onPressed = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
@@ -85,6 +89,7 @@ class CNNavigationBarAction {
         popupMenuItems = null,
         onPopupMenuSelected = null,
         padding = width,
+        tint = null,
         _isFixedSpace = true,
         _isFlexibleSpace = false,
         _usePopupMenuButton = false,
@@ -100,6 +105,7 @@ class CNNavigationBarAction {
         popupMenuItems = null,
         onPopupMenuSelected = null,
         padding = null,
+        tint = null,
         _isFixedSpace = false,
         _isFlexibleSpace = true,
         _usePopupMenuButton = false,
@@ -119,6 +125,10 @@ class CNNavigationBarAction {
   /// If null, uses the icon's intrinsic size or platform default.
   /// This overrides the size specified in the CNSymbol.
   final double? iconSize;
+
+  /// Tint color for this action's icon or label.
+  /// If null, uses the navigation bar's global tint color.
+  final Color? tint;
 
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
@@ -375,6 +385,8 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         widget.leading?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final leadingSpacers =
         widget.leading?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
+    final leadingTints =
+        widget.leading?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
     final trailingIcons =
         widget.trailing?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
     final trailingLabels =
@@ -387,6 +399,8 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         widget.trailing?.map((e) => e.iconSize ?? e.icon?.size ?? 0.0).toList() ?? [];
     final trailingSpacers =
         widget.trailing?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
+    final trailingTints =
+        widget.trailing?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
 
     // Collect popup menu data for native implementation
     final leadingPopupMenus = widget.leading?.map((action) {
@@ -441,6 +455,7 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       'leadingLabelSizes': leadingLabelSizes,
       'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
+      'leadingTints': leadingTints,
       'leadingPopupMenus': leadingPopupMenus,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
@@ -448,6 +463,7 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       'trailingLabelSizes': trailingLabelSizes,
       'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
+      'trailingTints': trailingTints,
       'trailingPopupMenus': trailingPopupMenus,
       'largeTitle': widget.largeTitle,
       'transparent': widget.transparent,
@@ -639,6 +655,10 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       }
     } else if (action.hasPopupMenu) {
       // Use traditional popup menu fallback
+      final child = action.icon != null 
+          ? CNIcon(symbol: action.icon!, size: action.iconSize, color: action.tint)
+          : Text(action.label ?? '', style: action.tint != null ? TextStyle(color: action.tint) : null);
+      
       return CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: () async {
@@ -668,18 +688,18 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
           );
           if (selected != null) action.onPopupMenuSelected?.call(selected);
         },
-        child: action.icon != null 
-            ? CNIcon(symbol: action.icon!, size: action.iconSize)
-            : Text(action.label ?? ''),
+        child: child,
       );
     } else {
       // Regular action button
+      final child = action.icon != null 
+          ? CNIcon(symbol: action.icon!, size: action.iconSize, color: action.tint)
+          : Text(action.label ?? '', style: action.tint != null ? TextStyle(color: action.tint) : null);
+      
       return CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: action.onPressed,
-        child: action.icon != null 
-            ? CNIcon(symbol: action.icon!, size: action.iconSize)
-            : Text(action.label ?? ''),
+        child: child,
       );
     }
   }

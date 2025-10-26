@@ -210,6 +210,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
                   CNToolbarAction(
                     label: 'Edit',
                     labelSize: 15,
+                    tint: CupertinoColors.systemBlue,
                     onPressed: () => print('Edit tapped'),
                   ),
                   const CNToolbarAction.fixedSpace(
@@ -266,6 +267,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         CNToolbarAction(
+          tint: CupertinoColors.systemGreen,
           icon: CNSymbol('square.and.arrow.up'),
           onPressed: () => print('Share tapped'),
         ),
@@ -294,6 +296,7 @@ class _ToolbarDemoPageState extends State<ToolbarDemoPage> {
         ),
         CNToolbarAction(
           icon: CNSymbol('plus'),
+           tint: CupertinoColors.systemRed,
           onPressed: () => print('Add tapped'),
         ),
       ],

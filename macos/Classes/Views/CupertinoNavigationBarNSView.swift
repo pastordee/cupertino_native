@@ -46,14 +46,17 @@ class CupertinoNavigationBarNSView: NSView {
     var leadingLabels: [String] = []
     var leadingPaddings: [Double] = []
     var leadingSpacers: [String] = []
+    var leadingTints: [Int] = []
     var middleIcons: [String] = []
     var middleLabels: [String] = []
     var middlePaddings: [Double] = []
     var middleSpacers: [String] = []
+    var middleTints: [Int] = []
     var trailingIcons: [String] = []
     var trailingLabels: [String] = []
     var trailingPaddings: [Double] = []
     var trailingSpacers: [String] = []
+    var trailingTints: [Int] = []
     var transparent: Bool = false
     var isDark: Bool = false
     var tint: NSColor? = nil
@@ -66,14 +69,17 @@ class CupertinoNavigationBarNSView: NSView {
       leadingLabels = (dict["leadingLabels"] as? [String]) ?? []
       leadingPaddings = (dict["leadingPaddings"] as? [Double]) ?? []
       leadingSpacers = (dict["leadingSpacers"] as? [String]) ?? []
+      leadingTints = (dict["leadingTints"] as? [Int]) ?? []
       middleIcons = (dict["middleIcons"] as? [String]) ?? []
       middleLabels = (dict["middleLabels"] as? [String]) ?? []
       middlePaddings = (dict["middlePaddings"] as? [Double]) ?? []
       middleSpacers = (dict["middleSpacers"] as? [String]) ?? []
+      middleTints = (dict["middleTints"] as? [Int]) ?? []
       trailingIcons = (dict["trailingIcons"] as? [String]) ?? []
       trailingLabels = (dict["trailingLabels"] as? [String]) ?? []
       trailingPaddings = (dict["trailingPaddings"] as? [Double]) ?? []
       trailingSpacers = (dict["trailingSpacers"] as? [String]) ?? []
+      trailingTints = (dict["trailingTints"] as? [Int]) ?? []
       pillHeight = dict["pillHeight"] as? Double
       middleAlignment = (dict["middleAlignment"] as? String) ?? "center"
       if let v = dict["transparent"] as? NSNumber { transparent = v.boolValue }
@@ -118,6 +124,7 @@ class CupertinoNavigationBarNSView: NSView {
         paddings: leadingPaddings,
         pillHeight: pillHeight,
         tint: tint,
+        tints: leadingTints,
         target: self,
         action: #selector(leadingTapped(_:))
       )
@@ -141,6 +148,7 @@ class CupertinoNavigationBarNSView: NSView {
         paddings: trailingPaddings,
         pillHeight: pillHeight,
         tint: tint,
+        tints: trailingTints,
         target: self,
         action: #selector(trailingTapped(_:))
       )
@@ -165,6 +173,7 @@ class CupertinoNavigationBarNSView: NSView {
         paddings: middlePaddings,
         pillHeight: pillHeight,
         tint: tint,
+        tints: middleTints,
         target: self,
         action: #selector(middleTapped(_:))
       )
@@ -293,6 +302,7 @@ class CupertinoNavigationBarNSView: NSView {
     paddings: [Double],
     pillHeight: Double?,
     tint: NSColor?,
+    tints: [Int] = [],
     target: Any?,
     action: Selector
   ) -> NSView {
@@ -368,7 +378,10 @@ class CupertinoNavigationBarNSView: NSView {
         button.title = labels[i]
       }
       
-      if let tintColor = tint {
+      // Apply individual tint color if available, otherwise use global tint
+      if i < tints.count && tints[i] != 0 {
+        button.contentTintColor = NSColor(argb: tints[i])
+      } else if let tintColor = tint {
         button.contentTintColor = tintColor
       }
       

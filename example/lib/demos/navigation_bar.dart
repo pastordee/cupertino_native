@@ -149,6 +149,11 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                         'Custom Actions',
                         'Back button and trailing actions',
                       ),
+                      _buildFeature(
+                        '🎨',
+                        'Action Colors',
+                        'Individual tint colors per action',
+                      ),
                       _buildFeature('🎯', 'SF Symbols', 'Native icon support'),
                       _buildFeature(
                         '🌓',
@@ -192,6 +197,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                   CNNavigationBarAction(
                     icon: CNSymbol('chevron.left'),
                     iconSize: 20,
+                    tint: CupertinoColors.systemBlue,
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -201,6 +207,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                     label: 'Back',
                     labelSize: 14,
                     padding: 2,
+                    tint: CupertinoColors.systemBlue,
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -229,6 +236,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                   CNNavigationBarAction(
                     icon: CNSymbol('gear'),
                     iconSize: 22,
+                    tint: CupertinoColors.systemGrey,
                     onPressed: () {
                       print('Settings tapped');
                     },
@@ -237,6 +245,7 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                   CNNavigationBarAction(
                     icon: CNSymbol('plus'),
                     iconSize: 18,
+                    tint: CupertinoColors.systemGreen,
                     onPressed: () {
                       print('Add tapped');
                     },

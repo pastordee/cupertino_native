@@ -32,6 +32,7 @@ class CNToolbarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   }) : popupMenuItems = null,
        onPopupMenuSelected = null,
        _isFixedSpace = false,
@@ -48,6 +49,7 @@ class CNToolbarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
@@ -64,6 +66,7 @@ class CNToolbarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
@@ -80,6 +83,7 @@ class CNToolbarAction {
     this.padding,
     this.labelSize,
     this.iconSize,
+    this.tint,
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
@@ -96,6 +100,7 @@ class CNToolbarAction {
       padding = width,
       labelSize = null,
       iconSize = null,
+      tint = null,
       _isFixedSpace = true,
       _isFlexibleSpace = false,
       _usePopupMenuButton = false,
@@ -111,6 +116,7 @@ class CNToolbarAction {
       padding = null,
       labelSize = null,
       iconSize = null,
+      tint = null,
       _isFixedSpace = false,
       _isFlexibleSpace = true,
       _usePopupMenuButton = false,
@@ -145,6 +151,10 @@ class CNToolbarAction {
   /// Custom padding for this action. If null, uses default platform padding.
   /// Specified in logical pixels. For fixed space, this is the width of the space.
   final double? padding;
+
+  /// Tint color for this action's icon or label.
+  /// If null, uses the toolbar's global tint color.
+  final Color? tint;
 
   /// Internal flag to indicate this is a fixed space item.
   final bool _isFixedSpace;
@@ -358,6 +368,8 @@ class _CNToolbarState extends State<CNToolbar> {
             )
             .toList() ??
         [];
+    final leadingTints =
+        widget.leading?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
 
     final middleIcons =
         widget.middle
@@ -382,6 +394,8 @@ class _CNToolbarState extends State<CNToolbar> {
             )
             .toList() ??
         [];
+    final middleTints =
+        widget.middle?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
 
     final trailingIcons =
         widget.trailing
@@ -408,6 +422,8 @@ class _CNToolbarState extends State<CNToolbar> {
             )
             .toList() ??
         [];
+    final trailingTints =
+        widget.trailing?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
 
     // Collect popup menu data for native implementation  
     final leadingPopupMenus = widget.leading?.map((action) {
@@ -492,12 +508,14 @@ class _CNToolbarState extends State<CNToolbar> {
       'leadingLabelSizes': leadingLabelSizes,
       'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
+      'leadingTints': leadingTints,
       'middleIcons': middleIcons,
       'middleLabels': middleLabels,
       'middlePaddings': middlePaddings,
       'middleLabelSizes': middleLabelSizes,
       'middleIconSizes': middleIconSizes,
       'middleSpacers': middleSpacers,
+      'middleTints': middleTints,
       'middleAlignment': widget.middleAlignment.name,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
@@ -505,6 +523,7 @@ class _CNToolbarState extends State<CNToolbar> {
       'trailingLabelSizes': trailingLabelSizes,
       'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
+      'trailingTints': trailingTints,
       'leadingPopupMenus': leadingPopupMenus,
       'middlePopupMenus': middlePopupMenus, 
       'trailingPopupMenus': trailingPopupMenus,
