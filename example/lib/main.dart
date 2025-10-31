@@ -13,7 +13,7 @@ import 'demos/pull_down_button_anchor_demo.dart';
 import 'demos/popup_button_demo.dart';
 import 'demos/pull_down_inline_actions_demo.dart';
 import 'demos/button.dart';
-import 'demos/navigation_bar.dart';
+import 'demos/navigation_bar_demo.dart';
 import 'demos/navigation_bar_scrollable.dart';
 import 'demos/toolbar.dart';
 import 'demos/native_search_bar.dart';

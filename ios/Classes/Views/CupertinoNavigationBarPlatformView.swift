@@ -48,6 +48,11 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     var isDark: Bool = false
     var tint: UIColor? = nil
     var pillHeight: Double? = nil
+    var hasSegmentedControl: Bool = false
+    var segmentedControlLabels: [String] = []
+    var segmentedControlSelectedIndex: Int = 0
+    var segmentedControlHeight: Double = 28.0
+    var segmentedControlTint: UIColor? = nil
 
     if let dict = args as? [String: Any] {
       title = (dict["title"] as? String) ?? ""
@@ -77,6 +82,13 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       middlePopupMenus = (dict["middlePopupMenus"] as? [Any?]) ?? []
       trailingPopupMenus = (dict["trailingPopupMenus"] as? [Any?]) ?? []
       pillHeight = dict["pillHeight"] as? Double
+      hasSegmentedControl = (dict["hasSegmentedControl"] as? Bool) ?? false
+      segmentedControlLabels = (dict["segmentedControlLabels"] as? [String]) ?? []
+      segmentedControlSelectedIndex = (dict["segmentedControlSelectedIndex"] as? Int) ?? 0
+      segmentedControlHeight = (dict["segmentedControlHeight"] as? Double) ?? 28.0
+      if let tintValue = dict["segmentedControlTint"] as? NSNumber {
+        segmentedControlTint = Self.colorFromARGB(tintValue.intValue)
+      }
       if let v = dict["largeTitle"] as? NSNumber { largeTitle = v.boolValue }
       if let v = dict["transparent"] as? NSNumber { transparent = v.boolValue }
       if let v = dict["isDark"] as? NSNumber { isDark = v.boolValue }
@@ -382,6 +394,63 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     if !middleIcons.isEmpty || !middleLabels.isEmpty {
       navigationItem.title = nil
       navigationItem.titleView = nil
+    } else if hasSegmentedControl && !segmentedControlLabels.isEmpty {
+      // THE INCREDIBLE HACK: Scrollable Segmented Control
+      // Create a scroll view container for the segmented control
+      let scrollView = UIScrollView()
+      scrollView.showsHorizontalScrollIndicator = false
+      scrollView.showsVerticalScrollIndicator = false
+      scrollView.bounces = true
+      scrollView.translatesAutoresizingMaskIntoConstraints = false
+      
+      // Create segmented control
+      let segmentedControl = UISegmentedControl(items: segmentedControlLabels)
+      segmentedControl.selectedSegmentIndex = segmentedControlSelectedIndex
+      segmentedControl.addTarget(self, action: #selector(segmentedControlValueChanged(_:)), for: .valueChanged)
+      segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+      
+      // Apply tint color if specified (use segmentedControlTint first, fallback to general tint)
+      if let segTint = segmentedControlTint {
+        segmentedControl.selectedSegmentTintColor = segTint
+      } else if let tintColor = tint {
+        segmentedControl.selectedSegmentTintColor = tintColor
+      }
+      
+      // Add segmented control to scroll view
+      scrollView.addSubview(segmentedControl)
+      
+      // Calculate the intrinsic width of the segmented control
+      let segmentWidth = segmentedControl.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).width
+      
+      // Constraints for segmented control within scroll view
+      NSLayoutConstraint.activate([
+        segmentedControl.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+        segmentedControl.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+        segmentedControl.topAnchor.constraint(equalTo: scrollView.topAnchor),
+        segmentedControl.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+        segmentedControl.heightAnchor.constraint(equalToConstant: CGFloat(segmentedControlHeight)),
+        segmentedControl.widthAnchor.constraint(equalToConstant: segmentWidth)
+      ])
+      
+      // Create a container view to hold scroll view and fade overlay
+      let containerView = UIView()
+      containerView.translatesAutoresizingMaskIntoConstraints = false
+      containerView.addSubview(scrollView)
+      
+      // Scroll view fills the container
+      NSLayoutConstraint.activate([
+        scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        scrollView.topAnchor.constraint(equalTo: containerView.topAnchor),
+        scrollView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        scrollView.heightAnchor.constraint(equalToConstant: CGFloat(segmentedControlHeight))
+      ])
+      
+      // Note: Gradient fade overlay temporarily removed for debugging
+      // Will add back once scrolling behavior is perfected
+      
+      navigationItem.titleView = containerView
+      navigationItem.title = nil
     } else if !title.isEmpty {
       if titleClickable {
         // Create a clickable title button
@@ -671,6 +740,63 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
   @objc private func titleTapped() {
     channel.invokeMethod("titleTapped", arguments: [:])
   }
+  
+  @objc private func segmentedControlValueChanged(_ sender: UISegmentedControl) {
+    // Center the selected segment in the scroll view
+    if let scrollView = sender.superview as? UIScrollView {
+      let selectedIndex = sender.selectedSegmentIndex
+      let segmentCount = sender.numberOfSegments
+      
+      guard segmentCount > 0 else {
+        channel.invokeMethod("segmentedControlChanged", arguments: ["selectedIndex": sender.selectedSegmentIndex])
+        return
+      }
+      
+      // Get the actual segment frames from subviews
+      let subviews = sender.subviews.sorted { $0.frame.minX < $1.frame.minX }
+      
+      // Get scroll view dimensions
+      let scrollViewWidth = scrollView.bounds.width
+      let contentWidth = scrollView.contentSize.width
+      let currentOffset = scrollView.contentOffset.x
+      
+      // Calculate selected segment position
+      var selectedSegmentX: CGFloat = 0
+      var selectedSegmentWidth: CGFloat = 0
+      
+      if selectedIndex < subviews.count {
+        let segmentView = subviews[selectedIndex]
+        selectedSegmentX = segmentView.frame.minX
+        selectedSegmentWidth = segmentView.frame.width
+      } else {
+        // Fallback
+        let totalWidth = sender.bounds.width
+        selectedSegmentWidth = totalWidth / CGFloat(segmentCount)
+        selectedSegmentX = CGFloat(selectedIndex) * selectedSegmentWidth
+      }
+      
+      // Calculate the center of the selected segment
+      let segmentCenter = selectedSegmentX + (selectedSegmentWidth / 2)
+      
+      // Calculate target offset to center the segment in the scroll view
+      var targetOffsetX = segmentCenter - (scrollViewWidth / 2)
+      
+      // Clamp to valid scroll range
+      let maxOffset = max(0, contentWidth - scrollViewWidth)
+      targetOffsetX = max(0, min(targetOffsetX, maxOffset))
+      
+      // Animate to center the segment
+      if abs(targetOffsetX - currentOffset) > 1.0 {
+        UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseOut], animations: {
+          scrollView.contentOffset = CGPoint(x: targetOffsetX, y: 0)
+        })
+      }
+    }
+    
+    // Notify Flutter about the selection change
+    channel.invokeMethod("segmentedControlChanged", arguments: ["selectedIndex": sender.selectedSegmentIndex])
+  }
+
   
   @objc private func buttonTouchDown(_ sender: UIButton) {
     // Animate button press with scale and alpha like UIBarButtonItem

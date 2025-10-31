@@ -10,6 +10,7 @@ import 'popup_menu_button.dart';
 import 'pull_down_button.dart';
 import 'search_config.dart';
 import 'search_bar.dart';
+import 'segmented_control.dart';
 
 /// Action item for navigation bar trailing/leading positions.
 class CNNavigationBarAction { 
@@ -24,6 +25,11 @@ class CNNavigationBarAction {
     this.tint,
   })  : popupMenuItems = null,
         onPopupMenuSelected = null,
+        segmentedControlLabels = null,
+        segmentedControlSelectedIndex = null,
+        onSegmentedControlValueChanged = null,
+        segmentedControlHeight = null,
+        segmentedControlWidth = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
         _usePopupMenuButton = false,
@@ -40,6 +46,11 @@ class CNNavigationBarAction {
     this.iconSize,
     this.tint,
   })  : onPressed = null,
+        segmentedControlLabels = null,
+        segmentedControlSelectedIndex = null,
+        onSegmentedControlValueChanged = null,
+        segmentedControlHeight = null,
+        segmentedControlWidth = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
         _usePopupMenuButton = false,
@@ -57,6 +68,11 @@ class CNNavigationBarAction {
     this.iconSize,
     this.tint,
   })  : onPressed = null,
+        segmentedControlLabels = null,
+        segmentedControlSelectedIndex = null,
+        onSegmentedControlValueChanged = null,
+        segmentedControlHeight = null,
+        segmentedControlWidth = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
         _usePopupMenuButton = true,
@@ -74,6 +90,11 @@ class CNNavigationBarAction {
     this.iconSize,
     this.tint,
   })  : onPressed = null,
+        segmentedControlLabels = null,
+        segmentedControlSelectedIndex = null,
+        onSegmentedControlValueChanged = null,
+        segmentedControlHeight = null,
+        segmentedControlWidth = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
         _usePopupMenuButton = false,
@@ -90,6 +111,11 @@ class CNNavigationBarAction {
         onPopupMenuSelected = null,
         padding = width,
         tint = null,
+        segmentedControlLabels = null,
+        segmentedControlSelectedIndex = null,
+        onSegmentedControlValueChanged = null,
+        segmentedControlHeight = null,
+        segmentedControlWidth = null,
         _isFixedSpace = true,
         _isFlexibleSpace = false,
         _usePopupMenuButton = false,
@@ -106,8 +132,35 @@ class CNNavigationBarAction {
         onPopupMenuSelected = null,
         padding = null,
         tint = null,
+        segmentedControlLabels = null,
+        segmentedControlSelectedIndex = null,
+        onSegmentedControlValueChanged = null,
+        segmentedControlHeight = null,
+        segmentedControlWidth = null,
         _isFixedSpace = false,
         _isFlexibleSpace = true,
+        _usePopupMenuButton = false,
+        _usePullDownButton = false;
+
+  /// Creates a navigation bar action with a segmented control.
+  /// This embeds a native UISegmentedControl/NSSegmentedControl in the navigation bar.
+  const CNNavigationBarAction.segmentedControl({
+    required this.segmentedControlLabels,
+    required this.segmentedControlSelectedIndex,
+    required this.onSegmentedControlValueChanged,
+    this.segmentedControlHeight,
+    this.segmentedControlWidth,
+    this.tint,
+    this.padding,
+  })  : icon = null,
+        label = null,
+        labelSize = null,
+        iconSize = null,
+        onPressed = null,
+        popupMenuItems = null,
+        onPopupMenuSelected = null,
+        _isFixedSpace = false,
+        _isFlexibleSpace = false,
         _usePopupMenuButton = false,
         _usePullDownButton = false;
 
@@ -145,6 +198,23 @@ class CNNavigationBarAction {
   /// Specified in logical pixels. For fixed space, this is the width of the space.
   final double? padding;
 
+  /// Segment labels for segmented control (only for segmentedControl constructor).
+  final List<String>? segmentedControlLabels;
+
+  /// Selected index for segmented control (only for segmentedControl constructor).
+  final int? segmentedControlSelectedIndex;
+
+  /// Called when a segment is selected in the segmented control.
+  final ValueChanged<int>? onSegmentedControlValueChanged;
+
+  /// Height of the segmented control in logical pixels.
+  /// If null, uses platform default height (typically 28-32 points).
+  final double? segmentedControlHeight;
+
+  /// Width of the segmented control in logical pixels.
+  /// If null, the control sizes itself based on content.
+  final double? segmentedControlWidth;
+
   /// Internal flag to indicate this is a fixed space item.
   final bool _isFixedSpace;
 
@@ -174,6 +244,9 @@ class CNNavigationBarAction {
 
   /// Returns true if this action uses CNPullDownButton.
   bool get usePullDownButton => _usePullDownButton;
+
+  /// Returns true if this action is a segmented control.
+  bool get isSegmentedControl => segmentedControlLabels != null && segmentedControlLabels!.isNotEmpty;
 }
 
 /// A Cupertino-native navigation bar with liquid glass translucent effect.
@@ -194,6 +267,11 @@ class CNNavigationBar extends StatefulWidget {
     this.transparent = true,
     this.tint,
     this.height,
+    this.segmentedControlLabels,
+    this.segmentedControlSelectedIndex,
+    this.onSegmentedControlValueChanged,
+    this.segmentedControlHeight,
+    this.segmentedControlTint,
   })  : searchConfig = null,
         scrollableContent = null,
         _isSearchEnabled = false,
@@ -228,6 +306,11 @@ class CNNavigationBar extends StatefulWidget {
     this.transparent = true,
     this.tint,
     this.height,
+    this.segmentedControlLabels,
+    this.segmentedControlSelectedIndex,
+    this.onSegmentedControlValueChanged,
+    this.segmentedControlHeight,
+    this.segmentedControlTint,
   })  : scrollableContent = null,
         _isSearchEnabled = true,
         _isScrollable = false;
@@ -266,6 +349,11 @@ class CNNavigationBar extends StatefulWidget {
     this.transparent = false,
     this.tint,
     this.height,
+    this.segmentedControlLabels,
+    this.segmentedControlSelectedIndex,
+    this.onSegmentedControlValueChanged,
+    this.segmentedControlHeight,
+    this.segmentedControlTint,
   })  : searchConfig = null,
         _isSearchEnabled = false,
         _isScrollable = true;
@@ -299,6 +387,25 @@ class CNNavigationBar extends StatefulWidget {
 
   /// Fixed height (if null, uses intrinsic platform height).
   final double? height;
+
+  /// Segment labels for the center segmented control.
+  /// If provided, replaces the title with a segmented control.
+  final List<String>? segmentedControlLabels;
+
+  /// Selected index for the center segmented control.
+  final int? segmentedControlSelectedIndex;
+
+  /// Called when a segment is selected in the center segmented control.
+  final ValueChanged<int>? onSegmentedControlValueChanged;
+
+  /// Height of the center segmented control in logical pixels.
+  /// If null, uses platform default height (typically 28 points).
+  final double? segmentedControlHeight;
+
+  /// Tint color for the selected segment background in the segmented control.
+  /// This is the background color of the selected segment.
+  /// If null, uses the navigation bar's tint color or system default.
+  final Color? segmentedControlTint;
 
   /// Search configuration (only for search-enabled navigation bar).
   final CNSearchConfig? searchConfig;
@@ -358,14 +465,32 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if segmented control is provided as a center view
+    final hasSegmentedControl = widget.segmentedControlLabels != null && 
+                                widget.segmentedControlLabels!.isNotEmpty;
+
     if (!(defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS)) {
       // Fallback for non-Apple platforms
+      Widget? middle;
+      if (hasSegmentedControl) {
+        middle = CNSegmentedControl(
+          labels: widget.segmentedControlLabels!,
+          selectedIndex: widget.segmentedControlSelectedIndex ?? 0,
+          onValueChanged: widget.onSegmentedControlValueChanged!,
+          height: widget.segmentedControlHeight ?? 28.0,
+          color: widget.tint,
+          shrinkWrap: false,
+        );
+      } else if (widget.title != null) {
+        middle = Text(widget.title!);
+      }
+      
       return CupertinoNavigationBar(
         leading: widget.leading != null && widget.leading!.isNotEmpty
             ? _buildActionWidget(widget.leading!.first)
             : null,
-        middle: widget.title != null ? Text(widget.title!) : null,
+        middle: middle,
         trailing: widget.trailing != null && widget.trailing!.isNotEmpty
             ? _buildActionWidget(widget.trailing!.first)
             : null,
@@ -373,6 +498,7 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       );
     }
 
+    // No need to filter actions anymore - segmented control is separate
     final leadingIcons =
         widget.leading?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
     final leadingLabels =
@@ -445,10 +571,13 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       return null;
     }).toList() ?? [];
 
+    // Use title only if no segmented control is present
+    final effectiveTitle = hasSegmentedControl ? '' : (widget.title ?? '');
+
     final creationParams = <String, dynamic>{
-      'title': widget.title ?? '',
+      'title': effectiveTitle,
       'titleSize': widget.titleSize ?? 0.0,
-      'titleClickable': widget.onTitlePressed != null,
+      'titleClickable': widget.onTitlePressed != null && !hasSegmentedControl,
       'leadingIcons': leadingIcons,
       'leadingLabels': leadingLabels,
       'leadingPaddings': leadingPaddings,
@@ -469,6 +598,12 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       'transparent': widget.transparent,
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),
+      // Segmented control parameters for native rendering in title view
+      'hasSegmentedControl': hasSegmentedControl,
+      'segmentedControlLabels': widget.segmentedControlLabels ?? [],
+      'segmentedControlSelectedIndex': widget.segmentedControlSelectedIndex ?? 0,
+      'segmentedControlHeight': widget.segmentedControlHeight ?? 28.0,
+      'segmentedControlTint': resolveColorToArgb(widget.segmentedControlTint ?? _effectiveTint, context),
     };
 
     final viewType = 'CupertinoNativeNavigationBar';
@@ -487,6 +622,8 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
           );
 
     final h = widget.height ?? _intrinsicHeight ?? 44.0;
+    
+    // Native platform view handles segmented control rendering in title view
     return SizedBox(height: h, child: platformView);
   }
 
@@ -549,6 +686,10 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       }
     } else if (call.method == 'titleTapped') {
       widget.onTitlePressed?.call();
+    } else if (call.method == 'segmentedControlChanged') {
+      final args = call.arguments as Map?;
+      final selectedIndex = (args?['selectedIndex'] as num?)?.toInt() ?? 0;
+      widget.onSegmentedControlValueChanged?.call(selectedIndex);
     }
     return null;
   }
@@ -689,6 +830,19 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
           if (selected != null) action.onPopupMenuSelected?.call(selected);
         },
         child: child,
+      );
+    } else if (action.isSegmentedControl) {
+      // Segmented control action
+      return SizedBox(
+        width: action.segmentedControlWidth,
+        child: CNSegmentedControl(
+          labels: action.segmentedControlLabels!,
+          selectedIndex: action.segmentedControlSelectedIndex ?? 0,
+          onValueChanged: action.onSegmentedControlValueChanged!,
+          height: action.segmentedControlHeight ?? 28.0,
+          color: action.tint,
+          shrinkWrap: action.segmentedControlWidth == null,
+        ),
       );
     } else {
       // Regular action button

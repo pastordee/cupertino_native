@@ -11,6 +11,7 @@ class NavigationBarDemoPage extends StatefulWidget {
 class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
   bool _isTransparent = true;
   bool _showLargeTitle = false;
+  int _selectedViewMode = 0; // 0: Grid, 1: List
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +155,11 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                         'Action Colors',
                         'Individual tint colors per action',
                       ),
+                      _buildFeature(
+                        '🎛️',
+                        'Segmented Control',
+                        'Native UISegmentedControl in navigation bar',
+                      ),
                       _buildFeature('🎯', 'SF Symbols', 'Native icon support'),
                       _buildFeature(
                         '🌓',
@@ -202,16 +208,16 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                       Navigator.of(context).pop();
                     },
                   ),
-                  CNNavigationBarAction.fixedSpace(5),
-                  CNNavigationBarAction(
-                    label: 'Back',
-                    labelSize: 14,
-                    padding: 2,
-                    tint: CupertinoColors.systemBlue,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
+                  // CNNavigationBarAction.fixedSpace(5),
+                  // CNNavigationBarAction(
+                  //   label: 'Back',
+                  //   labelSize: 14,
+                  //   padding: 2,
+                  //   tint: CupertinoColors.systemBlue,
+                  //   onPressed: () {
+                  //     Navigator.of(context).pop();
+                  //   },
+                  // ),
                 ],
                 title: 'Native Nav Bar',
                 titleSize: 20,
@@ -232,6 +238,22 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                     ),
                   );
                 },
+                // THE INCREDIBLE HACK: Scrollable segmented control with many segments!
+                // Try selecting the last segment to see it auto-scroll to center
+                segmentedControlLabels: [
+                  'Notifications',
+                  'Buddy Requests',
+                ],
+                segmentedControlSelectedIndex: _selectedViewMode,
+                onSegmentedControlValueChanged: (index) {
+                  setState(() {
+                    _selectedViewMode = index;
+                  });
+                  final labels = ['Notifications', 'Buddy Requests', 'Grid Requests', 'Messages'];
+                  print('Selected: ${labels[index]}');
+                },
+                segmentedControlHeight: 40,
+                segmentedControlTint: CupertinoColors.white,
                 trailing: [
                   CNNavigationBarAction(
                     icon: CNSymbol('gear'),
