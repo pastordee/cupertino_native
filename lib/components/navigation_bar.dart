@@ -23,6 +23,8 @@ class CNNavigationBarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   })  : popupMenuItems = null,
         onPopupMenuSelected = null,
         segmentedControlLabels = null,
@@ -45,6 +47,8 @@ class CNNavigationBarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   })  : onPressed = null,
         segmentedControlLabels = null,
         segmentedControlSelectedIndex = null,
@@ -67,6 +71,8 @@ class CNNavigationBarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   })  : onPressed = null,
         segmentedControlLabels = null,
         segmentedControlSelectedIndex = null,
@@ -89,6 +95,8 @@ class CNNavigationBarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   })  : onPressed = null,
         segmentedControlLabels = null,
         segmentedControlSelectedIndex = null,
@@ -111,6 +119,8 @@ class CNNavigationBarAction {
         onPopupMenuSelected = null,
         padding = width,
         tint = null,
+        badgeValue = null,
+        badgeColor = null,
         segmentedControlLabels = null,
         segmentedControlSelectedIndex = null,
         onSegmentedControlValueChanged = null,
@@ -132,6 +142,8 @@ class CNNavigationBarAction {
         onPopupMenuSelected = null,
         padding = null,
         tint = null,
+        badgeValue = null,
+        badgeColor = null,
         segmentedControlLabels = null,
         segmentedControlSelectedIndex = null,
         onSegmentedControlValueChanged = null,
@@ -159,6 +171,8 @@ class CNNavigationBarAction {
         onPressed = null,
         popupMenuItems = null,
         onPopupMenuSelected = null,
+        badgeValue = null,
+        badgeColor = null,
         _isFixedSpace = false,
         _isFlexibleSpace = false,
         _usePopupMenuButton = false,
@@ -182,6 +196,14 @@ class CNNavigationBarAction {
   /// Tint color for this action's icon or label.
   /// If null, uses the navigation bar's global tint color.
   final Color? tint;
+
+  /// Badge value to display on the action (e.g., notification count, status text).
+  /// If null, no badge is shown.
+  final String? badgeValue;
+
+  /// Background color for the badge.
+  /// If null, uses the platform default badge color (typically red).
+  final Color? badgeColor;
 
   /// Callback when the action is tapped.
   final VoidCallback? onPressed;
@@ -513,6 +535,10 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         widget.leading?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
     final leadingTints =
         widget.leading?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
+    final leadingBadgeValues =
+        widget.leading?.map((e) => e.badgeValue ?? '').toList() ?? [];
+    final leadingBadgeColors =
+        widget.leading?.map((e) => resolveColorToArgb(e.badgeColor, context) ?? 0).toList() ?? [];
     final trailingIcons =
         widget.trailing?.map((e) => e.isSpacer ? '' : (e.icon?.name ?? '')).toList() ?? [];
     final trailingLabels =
@@ -527,6 +553,10 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
         widget.trailing?.map((e) => e.isFlexibleSpace ? 'flexible' : (e.isFixedSpace ? 'fixed' : '')).toList() ?? [];
     final trailingTints =
         widget.trailing?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
+    final trailingBadgeValues =
+        widget.trailing?.map((e) => e.badgeValue ?? '').toList() ?? [];
+    final trailingBadgeColors =
+        widget.trailing?.map((e) => resolveColorToArgb(e.badgeColor, context) ?? 0).toList() ?? [];
 
     // Collect popup menu data for native implementation
     final leadingPopupMenus = widget.leading?.map((action) {
@@ -585,6 +615,8 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
       'leadingTints': leadingTints,
+      'leadingBadgeValues': leadingBadgeValues,
+      'leadingBadgeColors': leadingBadgeColors,
       'leadingPopupMenus': leadingPopupMenus,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
@@ -593,6 +625,8 @@ class _CNNavigationBarState extends State<CNNavigationBar> {
       'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
       'trailingTints': trailingTints,
+      'trailingBadgeValues': trailingBadgeValues,
+      'trailingBadgeColors': trailingBadgeColors,
       'trailingPopupMenus': trailingPopupMenus,
       'largeTitle': widget.largeTitle,
       'transparent': widget.transparent,

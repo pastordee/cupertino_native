@@ -33,6 +33,8 @@ class CNToolbarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   }) : popupMenuItems = null,
        onPopupMenuSelected = null,
        _isFixedSpace = false,
@@ -50,6 +52,8 @@ class CNToolbarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
@@ -67,6 +71,8 @@ class CNToolbarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
@@ -84,6 +90,8 @@ class CNToolbarAction {
     this.labelSize,
     this.iconSize,
     this.tint,
+    this.badgeValue,
+    this.badgeColor,
   }) : onPressed = null,
        _isFixedSpace = false,
        _isFlexibleSpace = false,
@@ -101,6 +109,8 @@ class CNToolbarAction {
       labelSize = null,
       iconSize = null,
       tint = null,
+      badgeValue = null,
+      badgeColor = null,
       _isFixedSpace = true,
       _isFlexibleSpace = false,
       _usePopupMenuButton = false,
@@ -117,6 +127,8 @@ class CNToolbarAction {
       labelSize = null,
       iconSize = null,
       tint = null,
+      badgeValue = null,
+      badgeColor = null,
       _isFixedSpace = false,
       _isFlexibleSpace = true,
       _usePopupMenuButton = false,
@@ -155,6 +167,14 @@ class CNToolbarAction {
   /// Tint color for this action's icon or label.
   /// If null, uses the toolbar's global tint color.
   final Color? tint;
+
+  /// Badge value to display on the action (e.g., notification count, status text).
+  /// If null, no badge is shown.
+  final String? badgeValue;
+
+  /// Background color for the badge.
+  /// If null, uses the platform default badge color (typically red).
+  final Color? badgeColor;
 
   /// Internal flag to indicate this is a fixed space item.
   final bool _isFixedSpace;
@@ -370,6 +390,10 @@ class _CNToolbarState extends State<CNToolbar> {
         [];
     final leadingTints =
         widget.leading?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
+    final leadingBadgeValues =
+        widget.leading?.map((e) => e.badgeValue ?? '').toList() ?? [];
+    final leadingBadgeColors =
+        widget.leading?.map((e) => resolveColorToArgb(e.badgeColor, context) ?? 0).toList() ?? [];
 
     final middleIcons =
         widget.middle
@@ -396,6 +420,10 @@ class _CNToolbarState extends State<CNToolbar> {
         [];
     final middleTints =
         widget.middle?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
+    final middleBadgeValues =
+        widget.middle?.map((e) => e.badgeValue ?? '').toList() ?? [];
+    final middleBadgeColors =
+        widget.middle?.map((e) => resolveColorToArgb(e.badgeColor, context) ?? 0).toList() ?? [];
 
     final trailingIcons =
         widget.trailing
@@ -424,6 +452,10 @@ class _CNToolbarState extends State<CNToolbar> {
         [];
     final trailingTints =
         widget.trailing?.map((e) => resolveColorToArgb(e.tint, context) ?? 0).toList() ?? [];
+    final trailingBadgeValues =
+        widget.trailing?.map((e) => e.badgeValue ?? '').toList() ?? [];
+    final trailingBadgeColors =
+        widget.trailing?.map((e) => resolveColorToArgb(e.badgeColor, context) ?? 0).toList() ?? [];
 
     // Collect popup menu data for native implementation  
     final leadingPopupMenus = widget.leading?.map((action) {
@@ -509,6 +541,8 @@ class _CNToolbarState extends State<CNToolbar> {
       'leadingIconSizes': leadingIconSizes,
       'leadingSpacers': leadingSpacers,
       'leadingTints': leadingTints,
+      'leadingBadgeValues': leadingBadgeValues,
+      'leadingBadgeColors': leadingBadgeColors,
       'middleIcons': middleIcons,
       'middleLabels': middleLabels,
       'middlePaddings': middlePaddings,
@@ -516,6 +550,8 @@ class _CNToolbarState extends State<CNToolbar> {
       'middleIconSizes': middleIconSizes,
       'middleSpacers': middleSpacers,
       'middleTints': middleTints,
+      'middleBadgeValues': middleBadgeValues,
+      'middleBadgeColors': middleBadgeColors,
       'middleAlignment': widget.middleAlignment.name,
       'trailingIcons': trailingIcons,
       'trailingLabels': trailingLabels,
@@ -524,6 +560,8 @@ class _CNToolbarState extends State<CNToolbar> {
       'trailingIconSizes': trailingIconSizes,
       'trailingSpacers': trailingSpacers,
       'trailingTints': trailingTints,
+      'trailingBadgeValues': trailingBadgeValues,
+      'trailingBadgeColors': trailingBadgeColors,
       'leadingPopupMenus': leadingPopupMenus,
       'middlePopupMenus': middlePopupMenus, 
       'trailingPopupMenus': trailingPopupMenus,

@@ -160,6 +160,11 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                         'Segmented Control',
                         'Native UISegmentedControl in navigation bar',
                       ),
+                      _buildFeature(
+                        '🔴',
+                        'Action Badges',
+                        'Display notification counts and indicators',
+                      ),
                       _buildFeature('🎯', 'SF Symbols', 'Native icon support'),
                       _buildFeature(
                         '🌓',
@@ -259,6 +264,8 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                     icon: CNSymbol('gear'),
                     iconSize: 22,
                     tint: CupertinoColors.systemGrey,
+                    badgeValue: '3',
+                    badgeColor: CupertinoColors.systemRed,
                     onPressed: () {
                       print('Settings tapped');
                     },
@@ -268,6 +275,8 @@ class _NavigationBarDemoPageState extends State<NavigationBarDemoPage> {
                     icon: CNSymbol('plus'),
                     iconSize: 18,
                     tint: CupertinoColors.systemGreen,
+                    badgeValue: 'New',
+                    badgeColor: CupertinoColors.systemOrange,
                     onPressed: () {
                       print('Add tapped');
                     },

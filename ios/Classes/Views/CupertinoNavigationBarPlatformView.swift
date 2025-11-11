@@ -30,6 +30,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     var leadingIconSizes: [Double] = []
     var leadingSpacers: [String] = []
     var leadingTints: [Int] = []
+    var leadingBadgeValues: [String] = []
+    var leadingBadgeColors: [Int] = []
     var middleIcons: [String] = []
     var middleLabels: [String] = []
     var middlePaddings: [Double] = []
@@ -43,6 +45,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     var trailingIconSizes: [Double] = []
     var trailingSpacers: [String] = []
     var trailingTints: [Int] = []
+    var trailingBadgeValues: [String] = []
+    var trailingBadgeColors: [Int] = []
     var largeTitle: Bool = false
     var transparent: Bool = false
     var isDark: Bool = false
@@ -65,6 +69,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       leadingIconSizes = (dict["leadingIconSizes"] as? [Double]) ?? []
       leadingSpacers = (dict["leadingSpacers"] as? [String]) ?? []
       leadingTints = (dict["leadingTints"] as? [Int]) ?? []
+      leadingBadgeValues = (dict["leadingBadgeValues"] as? [String]) ?? []
+      leadingBadgeColors = (dict["leadingBadgeColors"] as? [Int]) ?? []
       middleIcons = (dict["middleIcons"] as? [String]) ?? []
       middleLabels = (dict["middleLabels"] as? [String]) ?? []
       middlePaddings = (dict["middlePaddings"] as? [Double]) ?? []
@@ -78,6 +84,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       trailingIconSizes = (dict["trailingIconSizes"] as? [Double]) ?? []
       trailingSpacers = (dict["trailingSpacers"] as? [String]) ?? []
       trailingTints = (dict["trailingTints"] as? [Int]) ?? []
+      trailingBadgeValues = (dict["trailingBadgeValues"] as? [String]) ?? []
+      trailingBadgeColors = (dict["trailingBadgeColors"] as? [Int]) ?? []
       leadingPopupMenus = (dict["leadingPopupMenus"] as? [Any?]) ?? []
       middlePopupMenus = (dict["middlePopupMenus"] as? [Any?]) ?? []
       trailingPopupMenus = (dict["trailingPopupMenus"] as? [Any?]) ?? []
@@ -172,6 +180,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       var currentGroupIconSizes: [Double] = []
       var currentGroupIndices: [Int] = []
       var currentGroupTints: [Int] = []
+      var currentGroupBadgeValues: [String] = []
+      var currentGroupBadgeColors: [Int] = []
       var pendingSpacing: Double = 0.0  // Track spacing to add to next button
       
       func finalizeCurrentGroup() {
@@ -185,6 +195,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             pillHeight: pillHeight,
             tint: tint,
             tints: currentGroupTints,
+            badgeValues: currentGroupBadgeValues,
+            badgeColors: currentGroupBadgeColors,
             isDark: isDark,
             target: self,
             action: #selector(leadingTapped(_:)),
@@ -255,6 +267,11 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupIconSizes.append(iconSize)
           currentGroupIndices.append(i)
           currentGroupTints.append(tintValue)
+          
+          let badgeValue = i < leadingBadgeValues.count ? leadingBadgeValues[i] : ""
+          let badgeColor = i < leadingBadgeColors.count ? leadingBadgeColors[i] : 0
+          currentGroupBadgeValues.append(badgeValue)
+          currentGroupBadgeColors.append(badgeColor)
         }
       }
       
@@ -274,6 +291,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       var currentGroupPaddings: [Double] = []
       var currentGroupIndices: [Int] = []
       var currentGroupTints: [Int] = []
+      var currentGroupBadgeValues: [String] = []
+      var currentGroupBadgeColors: [Int] = []
       var pendingSpacing: Double = 0.0  // Track spacing to add to next button
       
       func finalizeCurrentGroup() {
@@ -287,6 +306,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             pillHeight: pillHeight,
             tint: tint,
             tints: currentGroupTints,
+            badgeValues: currentGroupBadgeValues,
+            badgeColors: currentGroupBadgeColors,
             isDark: isDark,
             target: self,
             action: #selector(middleTapped(_:)),
@@ -351,6 +372,11 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupPaddings.append(padding)
           currentGroupIndices.append(i)
           currentGroupTints.append(tintValue)
+          
+          let badgeValue = i < leadingBadgeValues.count ? leadingBadgeValues[i] : ""
+          let badgeColor = i < leadingBadgeColors.count ? leadingBadgeColors[i] : 0
+          currentGroupBadgeValues.append(badgeValue)
+          currentGroupBadgeColors.append(badgeColor)
         }
       }
       
@@ -505,6 +531,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
       var currentGroupIconSizes: [Double] = []
       var currentGroupIndices: [Int] = []
       var currentGroupTints: [Int] = []
+      var currentGroupBadgeValues: [String] = []
+      var currentGroupBadgeColors: [Int] = []
       var pendingSpacing: Double = 0.0  // Track spacing to add to next button
       
       func finalizeCurrentGroup() {
@@ -518,6 +546,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
             pillHeight: pillHeight,
             tint: tint,
             tints: currentGroupTints,
+            badgeValues: currentGroupBadgeValues,
+            badgeColors: currentGroupBadgeColors,
             isDark: isDark,
             target: self,
             action: #selector(trailingTapped(_:)),
@@ -588,6 +618,11 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
           currentGroupIconSizes.append(iconSize)
           currentGroupIndices.append(i)
           currentGroupTints.append(tintValue)
+          
+          let badgeValue = i < trailingBadgeValues.count ? trailingBadgeValues[i] : ""
+          let badgeColor = i < trailingBadgeColors.count ? trailingBadgeColors[i] : 0
+          currentGroupBadgeValues.append(badgeValue)
+          currentGroupBadgeColors.append(badgeColor)
         }
       }
       
@@ -858,6 +893,8 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
     pillHeight: Double?,
     tint: UIColor?,
     tints: [Int] = [],
+    badgeValues: [String] = [],
+    badgeColors: [Int] = [],
     isDark: Bool,
     target: Any?,
     action: Selector,
@@ -948,6 +985,44 @@ class CupertinoNavigationBarPlatformView: NSObject, FlutterPlatformView {
         if #available(iOS 14.0, *) {
           setupButtonMenu(button: button, menuItems: menuItems, actionIndex: i, location: location)
         }
+      }
+      
+      // Apply badge if available
+      if i < badgeValues.count && !badgeValues[i].isEmpty {
+        let badgeValue = badgeValues[i]
+        let badgeColor: UIColor
+        if i < badgeColors.count && badgeColors[i] != 0 {
+          badgeColor = UIColor(argb: badgeColors[i])
+        } else {
+          badgeColor = .systemRed  // Default red badge
+        }
+        
+        // Create badge label
+        let badgeLabel = UILabel()
+        badgeLabel.text = badgeValue
+        badgeLabel.textColor = .white
+        badgeLabel.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        badgeLabel.backgroundColor = badgeColor
+        badgeLabel.textAlignment = .center
+        badgeLabel.layer.cornerRadius = 9
+        badgeLabel.layer.masksToBounds = true
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Calculate badge width based on text
+        let minWidth: CGFloat = 18
+        let textWidth = (badgeValue as NSString).size(withAttributes: [.font: badgeLabel.font!]).width
+        let badgeWidth = max(minWidth, textWidth + 10)
+        
+        button.addSubview(badgeLabel)
+        
+        // Position badge at top-right corner
+        NSLayoutConstraint.activate([
+          badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: minWidth),
+          badgeLabel.widthAnchor.constraint(equalToConstant: badgeWidth),
+          badgeLabel.heightAnchor.constraint(equalToConstant: 18),
+          badgeLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -4),
+          badgeLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 2)
+        ])
       }
       
       // Ensure button has no background - only the pill blur view should show
