@@ -32,6 +32,7 @@ class CNSheet {
     itemBackgroundColor,
     itemTextColor,
     itemTintColor,
+    void Function(int index)? onItemSelected,
   }) {
     return CNNativeSheet.show(
       context: context,
@@ -48,6 +49,7 @@ class CNSheet {
       itemBackgroundColor: itemBackgroundColor,
       itemTextColor: itemTextColor,
       itemTintColor: itemTintColor,
+      onItemSelected: onItemSelected,
     );
   }
 
@@ -57,6 +59,8 @@ class CNSheet {
     required String title,
     String? message,
     List<CNSheetItem> items = const [],
+    List<CNSheetItemRow> itemRows = const [],
+    List<CNSheetInlineActions> inlineActions = const [],
     List<CNSheetDetent> detents = const [CNSheetDetent.large],
     bool prefersGrabberVisible = true,
     bool isModal = true,
@@ -66,6 +70,10 @@ class CNSheet {
     double? headerTitleSize,
     headerTitleWeight,
     headerTitleColor,
+    String headerTitleAlignment = 'left',
+    String? subtitle,
+    double? subtitleSize,
+    subtitleColor,
     double? headerHeight,
     headerBackgroundColor,
     bool showHeaderDivider = true,
@@ -77,12 +85,17 @@ class CNSheet {
     itemBackgroundColor,
     itemTextColor,
     itemTintColor,
+    void Function(int rowIndex, int actionIndex)? onInlineActionSelected,
+    void Function(int index)? onItemSelected,
+    void Function(int rowIndex, int itemIndex)? onItemRowSelected,
   }) {
     return CNNativeSheet.showWithCustomHeader(
       context: context,
       title: title,
       message: message,
       items: items,
+      itemRows: itemRows,
+      inlineActions: inlineActions,
       detents: detents,
       prefersGrabberVisible: prefersGrabberVisible,
       isModal: isModal,
@@ -93,6 +106,10 @@ class CNSheet {
       headerTitleSize: headerTitleSize,
       headerTitleWeight: headerTitleWeight,
       headerTitleColor: headerTitleColor,
+      headerTitleAlignment: headerTitleAlignment,
+      subtitle: subtitle,
+      subtitleSize: subtitleSize,
+      subtitleColor: subtitleColor,
       headerHeight: headerHeight,
       headerBackgroundColor: headerBackgroundColor,
       showHeaderDivider: showHeaderDivider,
@@ -104,6 +121,9 @@ class CNSheet {
       itemBackgroundColor: itemBackgroundColor,
       itemTextColor: itemTextColor,
       itemTintColor: itemTintColor,
+      onInlineActionSelected: onInlineActionSelected,
+      onItemSelected: onItemSelected,
+      onItemRowSelected: onItemRowSelected,
     );
   }
 

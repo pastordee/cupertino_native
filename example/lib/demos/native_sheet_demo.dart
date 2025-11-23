@@ -251,7 +251,7 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
 
   /// Example 1: Settings sheet with medium detent
   Future<void> _showSettingsSheet() async {
-    await CNSheet.show(
+    final result = await CNSheet.show(
       context: context,
       title: 'Display Settings',
       message: 'Sheet with medium detent (50% height)',
@@ -264,7 +264,13 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
       detents: [CNSheetDetent.medium],
       prefersGrabberVisible: true,
     );
-    setState(() => _lastAction = 'Settings sheet dismissed');
+    
+    if (result != null) {
+      final settings = ['Brightness', 'Text Size', 'Appearance', 'Display Zoom'];
+      setState(() => _lastAction = '${settings[result]} selected');
+    } else {
+      setState(() => _lastAction = 'Settings sheet dismissed without selection');
+    }
   }
 
   /// Example 2: Full height edit photo sheet
@@ -274,22 +280,26 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
       title: 'Edit Photo',
       message: 'Full height sheet for complex editing tasks',
       items: [
-        CNSheetItem(title: 'Crop', icon: 'crop'),
-        CNSheetItem(title: 'Adjust', icon: 'slider.horizontal.3'),
-        CNSheetItem(title: 'Filters', icon: 'camera.filters'),
-        CNSheetItem(title: 'Enhance', icon: 'wand.and.stars'),
-        CNSheetItem(title: 'Markup', icon: 'pencil.tip.crop.circle'),
-        CNSheetItem(title: 'Retouch', icon: 'bandage'),
+        CNSheetItem(title: 'Crop', icon: 'crop', iconLabelSpacing: 12),
+        CNSheetItem(title: 'Adjust', icon: 'slider.horizontal.3', iconLabelSpacing: 12),
+        CNSheetItem(title: 'Filters', icon: 'camera.filters', iconLabelSpacing: 12),
+        CNSheetItem(title: 'Enhance', icon: 'wand.and.stars', iconLabelSpacing: 12),
+        CNSheetItem(title: 'Markup', icon: 'pencil.tip.crop.circle', iconLabelSpacing: 12),
+        CNSheetItem(title: 'Retouch', icon: 'bandage', iconLabelSpacing: 12),
       ],
       detents: [CNSheetDetent.large],
       prefersGrabberVisible: true,
+      onItemSelected: (index) {
+        final edits = ['Crop', 'Adjust', 'Filters', 'Enhance', 'Markup', 'Retouch'];
+        setState(() => _lastAction = '${edits[index]} selected for photo');
+        print('${edits[index]} selected for photo');
+      },
     );
-    setState(() => _lastAction = 'Photo editing dismissed');
   }
 
   /// Example 3: Resizable sheet with both detents
   Future<void> _showResizableSheet() async {
-    await CNSheet.show(
+    final result = await CNSheet.show(
       context: context,
       title: 'Resizable Content',
       message: 'Drag the grabber or scroll to resize',
@@ -300,11 +310,17 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
       detents: [CNSheetDetent.medium, CNSheetDetent.large],
       prefersGrabberVisible: true,
     );
-    setState(() => _lastAction = 'Resizable sheet dismissed');
+    
+    if (result != null) {
+      setState(() => _lastAction = 'Item ${result + 1} selected from resizable sheet');
+    } else {
+      setState(() => _lastAction = 'Resizable sheet dismissed without selection');
+    }
   }
 
   /// Example 4: Nonmodal sheet - allows background interaction like Notes app
   /// Uses NATIVE rendering with simple items for true nonmodal behavior
+  /// Uses onItemSelected callback to capture formatting actions without dismissing
   Future<void> _showNonmodalSheet() async {
     final result = await CNSheet.showWithCustomHeader(
       context: context,
@@ -326,6 +342,42 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
           dismissOnTap: false,
         ),
       ],
+      inlineActions: [
+        CNSheetInlineActions(
+          actions: [
+            CNSheetInlineAction(
+              label: 'B',
+              icon: 'bold',
+            ),
+            CNSheetInlineAction(
+              label: 'I',
+              icon: 'italic',
+            ),
+            CNSheetInlineAction(
+              label: 'U',
+              icon: 'underline',
+            ),
+            CNSheetInlineAction(
+              label: 'S',
+              icon: 'strikethrough',
+            ),
+          ],
+        ),
+      ],
+      itemRows: const [
+        CNSheetItemRow(
+          items: [
+            CNSheetItem(
+              title: 'Reset All',
+              icon: 'arrow.counterclockwise',
+            ),
+            CNSheetItem(
+              title: 'Copy Format',
+              icon: 'doc.on.clipboard',
+            ),
+          ],
+        ),
+      ],
       detents: [CNSheetDetent.custom(360)],
       prefersGrabberVisible: false,
       isModal: false,
@@ -342,18 +394,29 @@ class _NativeSheetDemoPageState extends State<NativeSheetDemoPage> {
           .resolveFrom(context),
       itemTextColor: CupertinoColors.label.resolveFrom(context),
       itemTintColor: CupertinoColors.activeBlue.resolveFrom(context),
+      // Callback to capture item selections without dismissing the sheet
+      onItemSelected: (index) {
+        final actions = ['Bold', 'Italic', 'Underline', 'Strikethrough', 'Highlight'];
+        setState(() => _lastAction = '${actions[index]} applied (sheet stays open)');
+        print('${actions[index]} applied');
+      },
+      onItemRowSelected: (rowIndex, itemIndex) {
+        final itemNames = ['Reset All', 'Copy Format'];
+        setState(() => _lastAction = '${itemNames[itemIndex]} tapped in row $rowIndex');
+        print('${itemNames[itemIndex]} tapped');
+      },
+      onInlineActionSelected: (rowIndex, inlineActionIndex) {
+        setState(() {
+          final inlineActions = ['B', 'I', 'U', 'S'];
+          _lastAction = 'Inline action ${inlineActions[inlineActionIndex]} tapped (sheet stays open)';
+          print('${inlineActions[inlineActionIndex]} applied');
+        });
+      },
     );
 
-    if (result != null) {
-      final actions = [
-        'Bold',
-        'Italic',
-        'Underline',
-        'Strikethrough',
-        'Highlight',
-      ];
-      setState(() => _lastAction = '${actions[result]} applied');
-    } else {
+    // Result is null because all items have dismissOnTap: false
+    // Use the onItemSelected callback above to capture individual actions
+    if (result == null) {
       setState(() => _lastAction = 'Format sheet closed');
     }
   }

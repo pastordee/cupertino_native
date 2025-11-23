@@ -82,6 +82,9 @@ class CupertinoSheetHandler: NSObject {
                     sheetVC.itemTintColor = Self.colorFromARGB(colorValue)
                 }
                 
+                // Pass the channel for callbacks
+                sheetVC.channel = self.channel
+                
                 // Configure presentation style
                 if let sheet = sheetVC.sheetPresentationController {
                     // Set delegate first for nonmodal behavior
@@ -216,6 +219,7 @@ class CupertinoSheetViewController: UIViewController, UISheetPresentationControl
     var onDismiss: ((Int?) -> Void)?
     var isSheetModal: Bool = true
     var flutterViewController: FlutterViewController?
+    var channel: FlutterMethodChannel?
     
     // Item styling properties
     var itemBackgroundColor: UIColor?
@@ -356,7 +360,11 @@ class CupertinoSheetViewController: UIViewController, UISheetPresentationControl
                 
                 if let iconName = item["icon"] as? String, let icon = UIImage(systemName: iconName) {
                     button.setImage(icon, for: .normal)
-                    button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
+                    // Get icon-label spacing from item data, default to 8
+                    let iconLabelSpacing = item["iconLabelSpacing"] as? Double ?? 8.0
+                    // Use both imageEdgeInsets and titleEdgeInsets to properly space them
+                    button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: CGFloat(iconLabelSpacing))
+                    button.titleEdgeInsets = UIEdgeInsets(top: 0, left: CGFloat(iconLabelSpacing), bottom: 0, right: 0)
                 }
                 
                 contentStack.addArrangedSubview(button)
@@ -401,7 +409,22 @@ class CupertinoSheetViewController: UIViewController, UISheetPresentationControl
         } else if let gesture = sender as? UITapGestureRecognizer, let view = gesture.view {
             selectedIndex = view.tag
         }
-        // Don't dismiss here - let the user continue interacting
+        
+        // Invoke callback immediately when item is tapped
+        if let selectedIndex = selectedIndex {
+            channel?.invokeMethod("onItemSelected", arguments: ["index": selectedIndex])
+        }
+        
+        // Check if the tapped item should dismiss the sheet
+        if let selectedIndex = selectedIndex, selectedIndex < items.count {
+            let item = items[selectedIndex]
+            let dismissOnTap = item["dismissOnTap"] as? Bool ?? true
+            
+            if dismissOnTap {
+                // Dismiss the sheet
+                dismiss(animated: true)
+            }
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {

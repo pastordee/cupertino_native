@@ -659,7 +659,11 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
                 if let iconName = item["icon"] as? String, let icon = UIImage(systemName: iconName) {
                     let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .regular)
                     button.setImage(icon.withConfiguration(config), for: .normal)
-                    button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
+                    // Get icon-label spacing from item data, default to 8
+                    let iconLabelSpacing = item["iconLabelSpacing"] as? Double ?? 8.0
+                    // Use both imageEdgeInsets and titleEdgeInsets to properly space them
+                    button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: CGFloat(iconLabelSpacing))
+                    button.titleEdgeInsets = UIEdgeInsets(top: 0, left: CGFloat(iconLabelSpacing), bottom: 0, right: 0)
                 }
                 
                 contentStack.addArrangedSubview(button)
@@ -671,8 +675,7 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
         }
         
         // Add item rows (horizontal groups of vertical-style items)
-        var currentItemIndex = items.count // Continue indexing from regular items
-        for itemRowDict in itemRows {
+        for (rowIndex, itemRowDict) in itemRows.enumerated() {
             // Extract row-level styling properties
             let rowSpacing = (itemRowDict["spacing"] as? NSNumber)?.doubleValue ?? 8
             let rowHeight = (itemRowDict["height"] as? NSNumber)?.doubleValue ?? 50
@@ -685,7 +688,7 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
             rowStack.spacing = rowSpacing
             rowStack.translatesAutoresizingMaskIntoConstraints = false
             
-            for item in rowItems {
+            for (itemIndex, item) in rowItems.enumerated() {
                 if let title = item["title"] as? String {
                     let button = UIButton(type: .system)
                     button.setTitle(title, for: .normal)
@@ -728,9 +731,9 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
                     }
                     
                     button.layer.cornerRadius = 10
-                    button.tag = currentItemIndex
+                    // Encode row and item index into the tag: (rowIndex << 16) | itemIndex
+                    button.tag = (rowIndex << 16) | itemIndex
                     button.addTarget(self, action: #selector(itemTapped(_:)), for: .touchUpInside)
-                    currentItemIndex += 1
                     
                     // Check for custom text color first
                     if let textColorValue = item["textColor"] as? Int {
@@ -749,7 +752,11 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
                     if let iconName = item["icon"] as? String, let icon = UIImage(systemName: iconName) {
                         let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .regular)
                         button.setImage(icon.withConfiguration(config), for: .normal)
-                        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
+                        // Get icon-label spacing from item data, default to 8
+                        let iconLabelSpacing = item["iconLabelSpacing"] as? Double ?? 8.0
+                        // Use both imageEdgeInsets and titleEdgeInsets to properly space them
+                        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: CGFloat(iconLabelSpacing))
+                        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: CGFloat(iconLabelSpacing), bottom: 0, right: 0)
                     }
                     
                     rowStack.addArrangedSubview(button)
@@ -921,12 +928,86 @@ class CupertinoCustomSheetViewController: UIViewController, UISheetPresentationC
     @objc private func itemTapped(_ sender: Any) {
         if let button = sender as? UIButton {
             selectedIndex = button.tag
-            // Invoke callback immediately when item is tapped
-            channel?.invokeMethod("onItemSelected", arguments: ["index": button.tag])
+            
+            let totalRegularItems = items.count
+            
+            // Check if this is a regular item or an item row item
+            if button.tag < totalRegularItems {
+                // Regular item
+                let item = items[button.tag]
+                let dismissOnTap = item["dismissOnTap"] as? Bool ?? true
+                
+                // Invoke callback immediately when item is tapped
+                channel?.invokeMethod("onItemSelected", arguments: ["index": button.tag])
+                
+                if dismissOnTap {
+                    dismiss(animated: true)
+                }
+            } else {
+                // Item row item - decode the tag to get row and item indices
+                let itemRowIndex = (button.tag >> 16) & 0xFFFF
+                let itemInRowIndex = button.tag & 0xFFFF
+                
+                // Check if the item should dismiss the sheet
+                var dismissOnTap = true
+                if itemRowIndex < itemRows.count, let rowDict = itemRows[itemRowIndex] as? [String: Any],
+                   let rowItems = rowDict["items"] as? [[String: Any]],
+                   itemInRowIndex < rowItems.count {
+                    let item = rowItems[itemInRowIndex]
+                    dismissOnTap = item["dismissOnTap"] as? Bool ?? true
+                }
+                
+                // Invoke callback immediately when item row item is tapped
+                channel?.invokeMethod("onItemRowSelected", arguments: [
+                    "rowIndex": itemRowIndex,
+                    "itemIndex": itemInRowIndex
+                ])
+                
+                if dismissOnTap {
+                    dismiss(animated: true)
+                }
+            }
         } else if let gesture = sender as? UITapGestureRecognizer, let view = gesture.view {
             selectedIndex = view.tag
-            // Invoke callback immediately when item is tapped
-            channel?.invokeMethod("onItemSelected", arguments: ["index": view.tag])
+            
+            let totalRegularItems = items.count
+            
+            // Check if this is a regular item or an item row item
+            if view.tag < totalRegularItems {
+                // Regular item
+                let item = items[view.tag]
+                let dismissOnTap = item["dismissOnTap"] as? Bool ?? true
+                
+                // Invoke callback immediately when item is tapped
+                channel?.invokeMethod("onItemSelected", arguments: ["index": view.tag])
+                
+                if dismissOnTap {
+                    dismiss(animated: true)
+                }
+            } else {
+                // Item row item - decode the tag to get row and item indices
+                let itemRowIndex = (view.tag >> 16) & 0xFFFF
+                let itemInRowIndex = view.tag & 0xFFFF
+                
+                // Check if the item should dismiss the sheet
+                var dismissOnTap = true
+                if itemRowIndex < itemRows.count, let rowDict = itemRows[itemRowIndex] as? [String: Any],
+                   let rowItems = rowDict["items"] as? [[String: Any]],
+                   itemInRowIndex < rowItems.count {
+                    let item = rowItems[itemInRowIndex]
+                    dismissOnTap = item["dismissOnTap"] as? Bool ?? true
+                }
+                
+                // Invoke callback immediately when item row item is tapped
+                channel?.invokeMethod("onItemRowSelected", arguments: [
+                    "rowIndex": itemRowIndex,
+                    "itemIndex": itemInRowIndex
+                ])
+                
+                if dismissOnTap {
+                    dismiss(animated: true)
+                }
+            }
         }
     }
     

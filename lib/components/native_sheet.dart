@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
@@ -36,6 +38,7 @@ class CNSheetItem {
   final double? fontSize;
   final double? iconSize;
   final FontWeight? fontWeight;
+  final double? iconLabelSpacing;
 
   /// Creates a simple sheet item with title and optional icon.
   /// This will be rendered natively using UISheetPresentationController.
@@ -50,6 +53,7 @@ class CNSheetItem {
   /// [fontSize] - Font size for the title text (default: 17)
   /// [iconSize] - Size of the SF Symbol icon (default: 22)
   /// [fontWeight] - Font weight for the title text (default: regular)
+  /// [iconLabelSpacing] - Spacing between icon and title (default: 8)
   const CNSheetItem({
     required this.title,
     this.icon,
@@ -61,6 +65,7 @@ class CNSheetItem {
     this.fontSize,
     this.iconSize,
     this.fontWeight,
+    this.iconLabelSpacing,
   });
 
   Map<String, dynamic> toMap() {
@@ -77,6 +82,7 @@ class CNSheetItem {
     if (height != null) map['height'] = height;
     if (fontSize != null) map['fontSize'] = fontSize;
     if (iconSize != null) map['iconSize'] = iconSize;
+    if (iconLabelSpacing != null) map['iconLabelSpacing'] = iconLabelSpacing;
     if (fontWeight != null) {
       // Map FontWeight to Swift weight value
       final weightMap = {
@@ -253,6 +259,52 @@ class CNNativeSheet {
     'cupertino_native_custom_sheet',
   );
 
+  /// Stores pending sheet completers to handle async results from native code
+  static final Map<String, Completer<int?>> _pendingSheets =
+      <String, Completer<int?>>{};
+
+  /// Flag to track if handlers have been initialized
+  static bool _handlersInitialized = false;
+
+  /// Initialize method channel handlers for receiving sheet dismissal callbacks
+  static void _initializeHandlers() {
+    if (_handlersInitialized) return;
+    _handlersInitialized = true;
+
+    _channel.setMethodCallHandler((MethodCall call) async {
+      if (call.method == 'onDismiss') {
+        final args = call.arguments as Map;
+        final selectedIndex = args['selectedIndex'] as int?;
+        
+        // Complete the oldest pending sheet completer
+        if (_pendingSheets.isNotEmpty) {
+          final key = _pendingSheets.keys.first;
+          final completer = _pendingSheets.remove(key);
+          completer?.complete(selectedIndex == -1 ? null : selectedIndex);
+        }
+      }
+    });
+
+    _customChannel.setMethodCallHandler((MethodCall call) async {
+      if (call.method == 'onDismiss') {
+        final args = call.arguments as Map;
+        final selectedIndex = args['selectedIndex'] as int?;
+        
+        // Complete the oldest pending sheet completer
+        if (_pendingSheets.isNotEmpty) {
+          final key = _pendingSheets.keys.first;
+          final completer = _pendingSheets.remove(key);
+          completer?.complete(selectedIndex == -1 ? null : selectedIndex);
+        }
+      }
+    });
+  }
+
+  /// Generate a unique ID for sheet tracking
+  static String _generateSheetId() {
+    return 'sheet_${DateTime.now().millisecondsSinceEpoch}_${_pendingSheets.length}';
+  }
+
   /// Shows a native sheet with the given content.
   ///
   /// Uses native UISheetPresentationController for rendering. All items are
@@ -273,6 +325,7 @@ class CNNativeSheet {
   /// [itemBackgroundColor] - Background color for sheet item buttons (default: clear)
   /// [itemTextColor] - Text color for sheet item buttons (default: system label)
   /// [itemTintColor] - Tint color for icons in sheet item buttons (default: system tint)
+  /// [onItemSelected] - Callback invoked when a sheet item is tapped, receives the item index
   static Future<int?> show({
     required BuildContext context,
     String? title,
@@ -287,9 +340,39 @@ class CNNativeSheet {
     Color? itemBackgroundColor,
     Color? itemTextColor,
     Color? itemTintColor,
+    void Function(int index)? onItemSelected,
   }) async {
     try {
-      final result = await _channel.invokeMethod('showSheet', {
+      // Initialize handlers on first call
+      _initializeHandlers();
+      
+      // Create a completer to wait for the native dismissal callback
+      final completer = Completer<int?>();
+      final sheetId = _generateSheetId();
+      _pendingSheets[sheetId] = completer;
+      
+      // Set up callback handler if provided
+      if (onItemSelected != null) {
+        _channel.setMethodCallHandler((call) async {
+          if (call.method == 'onItemSelected') {
+            final index = call.arguments['index'] as int;
+            onItemSelected(index);
+          } else if (call.method == 'onDismiss') {
+            final args = call.arguments as Map;
+            final selectedIndex = args['selectedIndex'] as int?;
+            
+            // Complete the pending sheet completer for onDismiss
+            if (_pendingSheets.isNotEmpty) {
+              final key = _pendingSheets.keys.first;
+              final completer = _pendingSheets.remove(key);
+              completer?.complete(selectedIndex == -1 ? null : selectedIndex);
+            }
+          }
+        });
+      }
+
+      // Call native method (result will be null from this call)
+      await _channel.invokeMethod('showSheet', {
         'title': title,
         'message': message,
         'items': items.map((item) => item.toMap()).toList(),
@@ -307,10 +390,8 @@ class CNNativeSheet {
         if (itemTintColor != null) 'itemTintColor': itemTintColor.value,
       });
 
-      if (result is Map) {
-        return result['selectedIndex'] as int?;
-      }
-      return null;
+      // Wait for the sheet dismissal callback to complete the completer
+      return completer.future;
     } catch (e) {
       debugPrint('Error showing native sheet: $e');
       return null;
@@ -373,7 +454,8 @@ class CNNativeSheet {
   /// [itemTextColor] - Text color for sheet item buttons (default: system label)
   /// [itemTintColor] - Tint color for icons in sheet item buttons (default: system tint)
   /// [onInlineActionSelected] - Callback invoked when an inline action is tapped, receives row and action indices
-  /// [onItemSelected] - Callback invoked when a vertical item is tapped, receives the item index
+  /// [onItemSelected] - Callback invoked when a regular vertical item is tapped, receives the item index
+  /// [onItemRowSelected] - Callback invoked when an item row item is tapped, receives row index and item index
   static Future<int?> showWithCustomHeader({
     required BuildContext context,
     required String title,
@@ -410,8 +492,17 @@ class CNNativeSheet {
     // Callbacks
     void Function(int rowIndex, int actionIndex)? onInlineActionSelected,
     void Function(int index)? onItemSelected,
+    void Function(int rowIndex, int itemIndex)? onItemRowSelected,
   }) async {
     try {
+      // Initialize handlers on first call
+      _initializeHandlers();
+      
+      // Create a completer to wait for the native dismissal callback
+      final completer = Completer<int?>();
+      final sheetId = _generateSheetId();
+      _pendingSheets[sheetId] = completer;
+      
       // Serialize inline actions
       final inlineActionsList = <Map<String, dynamic>>[];
       for (final actionGroup in inlineActions) {
@@ -446,16 +537,30 @@ class CNNativeSheet {
         inlineActionsList.add(rowMap);
       }
       
-      // Set up callback handler if provided
-      if (onInlineActionSelected != null || onItemSelected != null) {
+      // Set up callback handler if provided - merge with the existing onDismiss handler
+      if (onInlineActionSelected != null || onItemSelected != null || onItemRowSelected != null) {
         _customChannel.setMethodCallHandler((call) async {
-          if (call.method == 'onInlineActionSelected' && onInlineActionSelected != null) {
+          if (call.method == 'onDismiss') {
+            final args = call.arguments as Map;
+            final selectedIndex = args['selectedIndex'] as int?;
+            
+            // Complete the pending sheet completer for onDismiss
+            if (_pendingSheets.isNotEmpty) {
+              final key = _pendingSheets.keys.first;
+              final completer = _pendingSheets.remove(key);
+              completer?.complete(selectedIndex == -1 ? null : selectedIndex);
+            }
+          } else if (call.method == 'onInlineActionSelected' && onInlineActionSelected != null) {
             final rowIndex = call.arguments['rowIndex'] as int;
             final actionIndex = call.arguments['actionIndex'] as int;
             onInlineActionSelected(rowIndex, actionIndex);
           } else if (call.method == 'onItemSelected' && onItemSelected != null) {
             final index = call.arguments['index'] as int;
             onItemSelected(index);
+          } else if (call.method == 'onItemRowSelected' && onItemRowSelected != null) {
+            final rowIndex = call.arguments['rowIndex'] as int;
+            final itemIndex = call.arguments['itemIndex'] as int;
+            onItemRowSelected(rowIndex, itemIndex);
           }
         });
       }
@@ -473,7 +578,8 @@ class CNNativeSheet {
         return rowMap;
       }).toList();
       
-      final result = await _customChannel.invokeMethod('showSheet', {
+      // Call native method (result will be null from this call)
+      await _customChannel.invokeMethod('showSheet', {
         'title': title,
         'message': message,
         'items': items.map((item) => item.toMap()).toList(),
@@ -515,10 +621,8 @@ class CNNativeSheet {
         if (itemTintColor != null) 'itemTintColor': itemTintColor.value,
       });
 
-      if (result is Map) {
-        return result['selectedIndex'] as int?;
-      }
-      return null;
+      // Wait for the sheet dismissal callback to complete the completer
+      return completer.future;
     } catch (e) {
       debugPrint('Error showing native custom header sheet: $e');
       return null;
